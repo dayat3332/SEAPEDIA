@@ -50,7 +50,7 @@ export default function SplitText({
     <Tag
       ref={ref}
       className={className}
-      style={{ overflow: 'hidden', display: 'inline-block', textAlign: 'center' }}
+      style={{ overflow: 'hidden', display: 'block', textAlign: 'center', width: '100%' }}
     >
       <motion.span
         variants={containerVariants}
@@ -59,7 +59,7 @@ export default function SplitText({
         onAnimationComplete={() => {
           if (isInView) onAnimationComplete?.();
         }}
-        style={{ display: 'inline-flex', flexWrap: 'wrap', justifyContent: 'center' }}
+        style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center' }}
       >
         {elements.map((el, i) => (
           <motion.span
