@@ -67,6 +67,10 @@ export default function ProductDetailPage() {
             src={getImageUrl(product.image_url)}
             alt={product.name}
             className="w-full h-full object-cover"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400';
+            }}
           />
         </div>
 

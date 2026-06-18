@@ -1,6 +1,7 @@
 const productService = require('../services/productService');
 const fs = require('fs');
 const path = require('path');
+const fileService = require('../services/fileService');
 
 const getProducts = async (req, res, next) => {
   try {
@@ -48,6 +49,7 @@ const createProduct = async (req, res, next) => {
     const { name, description, price, stock } = req.body;
     let imageUrl = req.body.imageUrl || '';
     if (req.file) {
+      await fileService.saveFile(req.file.filename, req.file.path, req.file.mimetype);
       imageUrl = `/uploads/${req.file.filename}`;
     }
     const product = await productService.createProduct({
@@ -73,6 +75,7 @@ const updateProduct = async (req, res, next) => {
     const { name, description, price, stock, isActive } = req.body;
     let imageUrl = req.body.imageUrl;
     if (req.file) {
+      await fileService.saveFile(req.file.filename, req.file.path, req.file.mimetype);
       imageUrl = `/uploads/${req.file.filename}`;
     }
     const product = await productService.updateProduct(req.params.id, store.id, {
@@ -107,6 +110,7 @@ const uploadProductImage = async (req, res, next) => {
     if (!req.file) {
       return res.status(400).json({ message: 'Image file is required.' });
     }
+    await fileService.saveFile(req.file.filename, req.file.path, req.file.mimetype);
     const imageUrl = `/uploads/${req.file.filename}`;
     res.json({ imageUrl });
   } catch (err) {

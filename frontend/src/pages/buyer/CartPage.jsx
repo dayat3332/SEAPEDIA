@@ -136,6 +136,10 @@ export default function CartPage() {
                       src={getImageUrl(item.image_url)}
                       alt={item.name}
                       className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400';
+                      }}
                     />
                   </div>
 

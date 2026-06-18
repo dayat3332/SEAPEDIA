@@ -372,7 +372,15 @@ export default function CheckoutPage() {
               {cart.items.map((item) => (
                 <div key={item.product_id} className="py-3 flex items-center gap-4">
                   <div className="w-12 h-12 rounded-lg overflow-hidden bg-surface-100 flex-shrink-0 flex items-center justify-center">
-                    <img src={getImageUrl(item.image_url)} alt={item.name} className="w-full h-full object-cover" />
+                    <img
+                      src={getImageUrl(item.image_url)}
+                      alt={item.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400';
+                      }}
+                    />
                   </div>
                   <div className="flex-grow min-w-0">
                     <h4 className="text-sm font-semibold text-surface-900 truncate">{item.name}</h4>

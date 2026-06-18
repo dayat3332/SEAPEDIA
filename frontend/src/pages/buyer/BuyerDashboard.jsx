@@ -669,7 +669,15 @@ export default function BuyerDashboard() {
                   <div key={item.id} className="flex items-center gap-3 py-3">
                     <div className="w-12 h-12 rounded-lg bg-surface-100 overflow-hidden flex-shrink-0 flex items-center justify-center">
                       {item.image_url ? (
-                        <img src={getImageUrl(item.image_url)} alt={item.product_name} className="w-full h-full object-cover" />
+                        <img
+                          src={getImageUrl(item.image_url)}
+                          alt={item.product_name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400';
+                          }}
+                        />
                       ) : (
                         <HiOutlineClipboardDocumentList className="text-surface-400" size={22} />
                       )}

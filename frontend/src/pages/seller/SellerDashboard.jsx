@@ -697,7 +697,15 @@ export default function SellerDashboard() {
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
               <div className="w-20 h-20 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-3xl overflow-hidden shadow-inner flex-shrink-0">
                 {store.image_url ? (
-                  <img src={getImageUrl(store.image_url)} alt={store.store_name} className="w-full h-full object-cover" />
+                  <img
+                    src={getImageUrl(store.image_url)}
+                    alt={store.store_name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = 'https://images.unsplash.com/photo-1472851294608-062f824d296e?w=200';
+                    }}
+                  />
                 ) : (
                   store.store_name.substring(0, 2).toUpperCase()
                 )}
@@ -781,7 +789,15 @@ export default function SellerDashboard() {
                               <div className="flex items-center gap-3">
                                 <div className="w-12 h-12 rounded-lg bg-surface-100 overflow-hidden flex-shrink-0 flex items-center justify-center">
                                   {p.image_url ? (
-                                    <img src={getImageUrl(p.image_url)} alt={p.name} className="w-full h-full object-cover" />
+                                    <img
+                                      src={getImageUrl(p.image_url)}
+                                      alt={p.name}
+                                      className="w-full h-full object-cover"
+                                      onError={(e) => {
+                                        e.target.onerror = null;
+                                        e.target.src = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400';
+                                      }}
+                                    />
                                   ) : (
                                     <HiOutlineCube className="text-surface-400" size={24} />
                                   )}
@@ -904,7 +920,15 @@ export default function SellerDashboard() {
             <div className="mt-1 flex items-center gap-4">
               {storeLogo && (
                 <div className="w-16 h-16 rounded-lg bg-surface-100 overflow-hidden flex-shrink-0 flex items-center justify-center border border-surface-200">
-                  <img src={getImageUrl(storeLogo)} alt="Preview Logo" className="w-full h-full object-cover" />
+                  <img
+                    src={getImageUrl(storeLogo)}
+                    alt="Preview Logo"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = 'https://images.unsplash.com/photo-1472851294608-062f824d296e?w=200';
+                    }}
+                  />
                 </div>
               )}
               <div className="flex-grow">
@@ -985,7 +1009,15 @@ export default function SellerDashboard() {
             <div className="mt-1 flex items-center gap-4">
               {productImage && (
                 <div className="w-16 h-16 rounded-lg bg-surface-100 overflow-hidden flex-shrink-0 flex items-center justify-center border border-surface-200">
-                  <img src={getImageUrl(productImage)} alt="Preview" className="w-full h-full object-cover" />
+                  <img
+                    src={getImageUrl(productImage)}
+                    alt="Preview"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400';
+                    }}
+                  />
                 </div>
               )}
               <div className="flex-grow">
@@ -1116,7 +1148,15 @@ export default function SellerDashboard() {
                   <div key={item.id} className="flex items-center gap-3 py-3">
                     <div className="w-12 h-12 rounded-lg bg-surface-100 overflow-hidden flex-shrink-0 flex items-center justify-center text-surface-400">
                       {item.image_url ? (
-                        <img src={getImageUrl(item.image_url)} alt={item.product_name} className="w-full h-full object-cover" />
+                        <img
+                          src={getImageUrl(item.image_url)}
+                          alt={item.product_name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400';
+                          }}
+                        />
                       ) : (
                         <HiOutlineCube size={22} />
                       )}
