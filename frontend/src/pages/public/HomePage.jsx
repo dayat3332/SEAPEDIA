@@ -102,7 +102,7 @@ export default function HomePage() {
               from={{ opacity: 0, y: 30, filter: 'blur(4px)' }}
               to={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
               tag="span"
-              className="block"
+              className="block text-center w-full"
             />
             <span className="block mt-2">
               <FadeContent delay={0.3} duration={0.5} blur>
