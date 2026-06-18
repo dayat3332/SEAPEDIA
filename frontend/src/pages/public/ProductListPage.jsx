@@ -5,9 +5,6 @@ import { productService } from '../../services';
 import ProductCard from '../../components/shared/ProductCard';
 import { Input, Spinner, Button } from '../../components/ui';
 
-// React Bits animation components
-import { BlurText, ScrollReveal, FadeContent } from '../../components/reactbits';
-
 export default function ProductListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
@@ -53,35 +50,26 @@ export default function ProductListPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Header with BlurText animation */}
-      <div className="mb-8">
+      {/* Header */}
+      <div className="mb-8 animate-fade-in">
         <h1 className="text-3xl font-bold text-surface-900 mb-2">
-          <BlurText
-            text="Product Catalog"
-            delay={0.06}
-            duration={0.5}
-            animateBy="words"
-          />
+          Product Catalog
         </h1>
-        <FadeContent delay={0.3} duration={0.5} direction="up" distance={16}>
-          <p className="text-surface-500">Discover products from verified sellers across SEAPEDIA.</p>
-        </FadeContent>
+        <p className="text-surface-500">Discover products from verified sellers across SEAPEDIA.</p>
       </div>
 
       {/* Search Bar */}
-      <FadeContent delay={0.4} duration={0.5} direction="up" distance={16}>
-        <form onSubmit={handleSearch} className="flex gap-3 mb-8">
-          <div className="flex-1">
-            <Input
-              icon={HiMagnifyingGlass}
-              placeholder="Search products..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-          <Button type="submit">Search</Button>
-        </form>
-      </FadeContent>
+      <form onSubmit={handleSearch} className="flex gap-3 mb-8">
+        <div className="flex-1">
+          <Input
+            icon={HiMagnifyingGlass}
+            placeholder="Search products..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        <Button type="submit">Search</Button>
+      </form>
 
       {/* Results info */}
       {!loading && (
@@ -97,17 +85,8 @@ export default function ProductListPage() {
       ) : products.length > 0 ? (
         <>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-            {products.map((product, idx) => (
-              <ScrollReveal
-                key={product.id}
-                delay={idx * 0.06}
-                duration={0.5}
-                origin="bottom"
-                distance={30}
-                threshold={0.05}
-              >
-                <ProductCard product={product} />
-              </ScrollReveal>
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} />
             ))}
           </div>
 
