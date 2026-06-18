@@ -141,7 +141,10 @@ export default function DriverDashboard() {
         <div>
           <div className="flex items-center gap-3 mb-2">
             <h1 className="text-2xl font-bold text-surface-900">Driver Portal</h1>
-            <Badge variant="success">Driver</Badge>
+            <Badge variant="driver" className="flex items-center gap-1">
+              <HiOutlineTruck size={14} />
+              <span>Driver</span>
+            </Badge>
           </div>
           <p className="text-surface-500">Welcome back, {user?.full_name}. Manage deliveries and track your earnings.</p>
         </div>

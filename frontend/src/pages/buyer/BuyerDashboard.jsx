@@ -234,7 +234,10 @@ export default function BuyerDashboard() {
         <div>
           <div className="flex items-center gap-3 mb-2">
             <h1 className="text-2xl font-bold text-surface-900">Buyer Dashboard</h1>
-            <Badge variant="buyer">{ROLE_CONFIG.buyer.icon} Buyer</Badge>
+            <Badge variant="buyer" className="flex items-center gap-1">
+              {ROLE_CONFIG.buyer.IconComponent ? <ROLE_CONFIG.buyer.IconComponent size={14} /> : ROLE_CONFIG.buyer.icon}
+              <span>Buyer</span>
+            </Badge>
           </div>
           <p className="text-surface-500 text-sm">Welcome back, {user?.full_name}. Manage your settings and track orders.</p>
         </div>
@@ -377,7 +380,7 @@ export default function BuyerDashboard() {
 
             {addresses.length === 0 ? (
               <Card className="p-12 text-center border-dashed border-2 border-surface-250">
-                <HiOutlineMapPin className="mx-auto text-surface-300 mb-4 animate-bounce" size={40} />
+                <HiOutlineMapPin className="mx-auto text-surface-300 mb-4" size={40} />
                 <p className="text-surface-500 font-medium mb-1">No addresses saved yet</p>
                 <p className="text-xs text-surface-400 mb-6">Add an address so we can deliver your orders.</p>
                 <Button onClick={() => openAddressModal()} size="sm" variant="secondary">

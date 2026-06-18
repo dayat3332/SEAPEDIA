@@ -8,6 +8,9 @@ import { Button, Input, Spinner, Modal } from '../../components/ui';
 import { formatDate } from '../../utils/helpers';
 import toast from 'react-hot-toast';
 
+// React Bits animation components
+import { SplitText, BlurText, GradientText, ScrollReveal, ScrollFloat, FadeContent } from '../../components/reactbits';
+
 export default function HomePage() {
   const [products, setProducts] = useState([]);
   const [reviews, setReviews] = useState([]);
@@ -84,34 +87,60 @@ export default function HomePage() {
     <div>
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-slate-900 text-white">
-        {/* Subtle grid pattern for professional background */}
         <div className="absolute inset-0 bg-grid-pattern opacity-10" />
         <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-primary-500/10 rounded-full blur-3xl" />
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-indigo-500/5 rounded-full blur-3xl" />
 
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32 flex flex-col items-center justify-center text-center">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-tight mb-6 tracking-tight">
-            Integrated Multi-Role E-Commerce <br />
-            <span className="bg-gradient-to-r from-primary-300 to-indigo-100 bg-clip-text text-transparent">Marketplace Platform</span>
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-tight mb-6 tracking-tight flex flex-col items-center">
+            <SplitText
+              text="Integrated Multi-Role E-Commerce"
+              delay={0.05}
+              duration={0.6}
+              ease="easeOut"
+              splitBy="words"
+              from={{ opacity: 0, y: 30, filter: 'blur(4px)' }}
+              to={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+              tag="span"
+              className="block"
+            />
+            <span className="block mt-2">
+              <FadeContent delay={0.3} duration={0.5} blur>
+                <GradientText
+                  colors={['#e0e7ff', '#c7d2fe', '#818cf8', '#c7d2fe', '#e0e7ff']}
+                  animationSpeed={6}
+                  className="text-4xl sm:text-5xl lg:text-6xl font-extrabold"
+                >
+                  Marketplace Platform
+                </GradientText>
+              </FadeContent>
+            </span>
           </h1>
 
-          <p className="text-lg text-slate-300 mb-10 max-w-2xl mx-auto leading-relaxed">
-            SEAPEDIA bridges buyers, store owners, and delivery drivers in a single, unified marketplace system. Purchase items, manage stores, and fulfill deliveries seamlessly.
-          </p>
-
-          <div className="flex flex-wrap gap-4 justify-center">
-            <Link to="/products">
-              <Button size="lg" className="px-8 shadow-sm">
-                Explore Products
-                <HiArrowRight size={18} />
-              </Button>
-            </Link>
-            <Link to="/register">
-              <Button variant="outline" size="lg" className="!border-slate-700 !text-white hover:!bg-white/10 px-8">
-                Get Started
-              </Button>
-            </Link>
+          <div className="text-lg text-slate-350 mb-10 max-w-2xl mx-auto leading-relaxed">
+            <BlurText
+              text="SEAPEDIA bridges buyers, store owners, and delivery drivers in a single, unified marketplace system. Purchase items, manage stores, and fulfill deliveries seamlessly."
+              delay={0.03}
+              duration={0.4}
+              animateBy="words"
+            />
           </div>
+
+          <FadeContent delay={0.6} duration={0.5} blur>
+            <div className="flex flex-wrap gap-4 justify-center">
+              <Link to="/products">
+                <Button size="lg" className="px-8 shadow-sm">
+                  Explore Products
+                  <HiArrowRight size={18} />
+                </Button>
+              </Link>
+              <Link to="/register">
+                <Button variant="outline" size="lg" className="!border-slate-700 !text-white hover:!bg-white/10 px-8">
+                  Get Started
+                </Button>
+              </Link>
+            </div>
+          </FadeContent>
         </div>
 
         {/* Bottom wave decoration */}
@@ -124,21 +153,31 @@ export default function HomePage() {
 
       {/* Features Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="text-center mb-14">
+        <ScrollFloat className="text-center mb-14" threshold={0.3}>
           <p className="text-xs font-semibold text-primary-600 uppercase tracking-wider mb-2">Platform Capabilities</p>
           <h2 className="text-3xl sm:text-4xl font-bold text-surface-900 mb-3 tracking-tight">Built for Everyone in the Ecosystem</h2>
           <p className="text-surface-500 max-w-xl mx-auto">A robust e-commerce suite featuring modular dashboard management.</p>
-        </div>
+        </ScrollFloat>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {features.map((f, i) => (
-            <div key={i} className="group p-6 rounded-2xl bg-white border border-surface-100 hover:border-surface-200 hover:shadow-md transition-all duration-200 h-full">
-              <div className="w-11 h-11 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center mb-5 group-hover:bg-primary-600 group-hover:text-white transition-all duration-200">
-                <f.icon size={22} />
+            <ScrollReveal
+              key={i}
+              delay={i * 0.08}
+              duration={0.5}
+              origin="bottom"
+              distance={40}
+              blur
+              threshold={0.1}
+            >
+              <div className="group p-6 rounded-2xl bg-white border border-surface-100 hover:border-surface-200 hover:shadow-md transition-all duration-200 h-full">
+                <div className="w-11 h-11 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center mb-5 group-hover:bg-primary-600 group-hover:text-white transition-all duration-200">
+                  <f.icon size={22} />
+                </div>
+                <h3 className="font-semibold text-surface-900 mb-2 text-base">{f.title}</h3>
+                <p className="text-sm text-surface-500 leading-relaxed">{f.desc}</p>
               </div>
-              <h3 className="font-semibold text-surface-900 mb-2 text-base">{f.title}</h3>
-              <p className="text-sm text-surface-500 leading-relaxed">{f.desc}</p>
-            </div>
+            </ScrollReveal>
           ))}
         </div>
       </section>
@@ -146,7 +185,7 @@ export default function HomePage() {
       {/* Featured Products */}
       <section className="bg-white py-20 border-t border-b border-surface-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-end justify-between mb-10">
+          <ScrollFloat className="flex items-end justify-between mb-10" threshold={0.3}>
             <div>
               <p className="text-xs font-semibold text-primary-600 uppercase tracking-wider mb-2">Marketplace Catalog</p>
               <h2 className="text-3xl sm:text-4xl font-bold text-surface-900 tracking-tight">Featured Products</h2>
@@ -155,14 +194,23 @@ export default function HomePage() {
             <Link to="/products" className="hidden sm:inline-flex items-center gap-1.5 text-sm font-semibold text-primary-600 hover:text-primary-700 transition-colors px-4 py-2 rounded-lg hover:bg-primary-50">
               View All Catalog <HiArrowRight size={16} />
             </Link>
-          </div>
+          </ScrollFloat>
 
           {loading ? (
             <Spinner className="py-20" />
           ) : products.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-              {products.map((product) => (
-                <ProductCard key={product.id} product={product} />
+              {products.map((product, idx) => (
+                <ScrollReveal
+                  key={product.id}
+                  delay={idx * 0.05}
+                  duration={0.4}
+                  origin="bottom"
+                  distance={20}
+                  threshold={0.05}
+                >
+                  <ProductCard product={product} />
+                </ScrollReveal>
               ))}
             </div>
           ) : (
@@ -182,7 +230,7 @@ export default function HomePage() {
 
       {/* Reviews Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 overflow-hidden">
-        <div className="text-center mb-12">
+        <ScrollFloat className="text-center mb-12" threshold={0.3}>
           <p className="text-xs font-semibold text-primary-600 uppercase tracking-wider mb-2">Testimonials</p>
           <h2 className="text-3xl sm:text-4xl font-bold text-surface-900 mb-4 tracking-tight">User Feedback</h2>
           <div className="flex items-center justify-center gap-3">
@@ -191,7 +239,7 @@ export default function HomePage() {
               {reviewStats.averageRating} / 5 rating from {reviewStats.total} reviews
             </span>
           </div>
-        </div>
+        </ScrollFloat>
 
         <div className="relative group max-w-7xl mx-auto px-4">
           {/* Left Navigation Button */}
@@ -206,32 +254,40 @@ export default function HomePage() {
           {/* Carousel Viewport */}
           <div
             ref={carouselRef}
-            className="overflow-x-auto flex gap-6 pb-6 pt-2 px-2 scroll-smooth scrollbar-none snap-x snap-mandatory animate-fade-in"
+            className="overflow-x-auto flex gap-6 pb-6 pt-2 px-2 scroll-smooth scrollbar-none snap-x snap-mandatory"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
             {reviews.length > 0 ? (
-              reviews.map((review) => (
+              reviews.map((review, idx) => (
                 <div
                   key={review.id}
                   className="flex-shrink-0 w-full sm:w-[calc((100%-24px)/2)] lg:w-[calc((100%-48px)/3)] snap-start"
                 >
-                  <div className="p-6 rounded-2xl bg-white border border-surface-100 hover:border-surface-200 hover:shadow-sm transition-all duration-200 h-full flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-semibold text-sm flex-shrink-0">
-                            {review.reviewer_name.charAt(0).toUpperCase()}
+                  <ScrollReveal
+                    delay={idx * 0.05}
+                    duration={0.4}
+                    origin="bottom"
+                    distance={20}
+                    threshold={0.05}
+                  >
+                    <div className="p-6 rounded-2xl bg-white border border-surface-100 hover:border-surface-200 hover:shadow-sm transition-all duration-200 h-full flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-semibold text-sm flex-shrink-0">
+                              {review.reviewer_name.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <p className="font-bold text-surface-900 text-sm">{review.reviewer_name}</p>
+                              <p className="text-[10px] text-surface-400 font-medium">{formatDate(review.created_at)}</p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-bold text-surface-900 text-sm">{review.reviewer_name}</p>
-                            <p className="text-[10px] text-surface-400 font-medium">{formatDate(review.created_at)}</p>
-                          </div>
+                          <RatingStars rating={review.rating} size={14} />
                         </div>
-                        <RatingStars rating={review.rating} size={14} />
+                        <p className="text-sm text-surface-600 leading-relaxed italic">"{review.comment}"</p>
                       </div>
-                      <p className="text-sm text-surface-600 leading-relaxed italic">"{review.comment}"</p>
                     </div>
-                  </div>
+                  </ScrollReveal>
                 </div>
               ))
             ) : (
@@ -254,14 +310,22 @@ export default function HomePage() {
 
         {/* Action Button & Modal trigger */}
         <div className="text-center mt-10">
-          <Button
-            size="lg"
-            onClick={() => setIsReviewModalOpen(true)}
-            className="shadow-sm hover:shadow-md transition-all duration-200"
+          <ScrollReveal
+            delay={0.1}
+            duration={0.4}
+            origin="bottom"
+            distance={20}
+            threshold={0.05}
           >
-            <HiStar className="text-amber-400 mr-2" size={18} />
-            Write a Review
-          </Button>
+            <Button
+              size="lg"
+              onClick={() => setIsReviewModalOpen(true)}
+              className="shadow-sm hover:shadow-md transition-all duration-200"
+            >
+              <HiStar className="text-amber-400 mr-2" size={18} />
+              Write a Review
+            </Button>
+          </ScrollReveal>
         </div>
       </section>
 

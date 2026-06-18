@@ -44,14 +44,16 @@ export const ROLE_LABELS = {
   driver: 'Driver',
 };
 
+import { HiOutlineShieldCheck, HiOutlineBuildingStorefront, HiOutlineShoppingBag, HiOutlineTruck } from 'react-icons/hi2';
+
 /**
  * Map role to color config for badges/icons.
  */
 export const ROLE_CONFIG = {
-  admin: { color: 'purple', icon: '🛡️', label: 'Admin', bgClass: 'bg-purple-50 text-purple-700' },
-  seller: { color: 'amber', icon: '🏪', label: 'Seller', bgClass: 'bg-amber-50 text-amber-700' },
-  buyer: { color: 'emerald', icon: '🛒', label: 'Buyer', bgClass: 'bg-emerald-50 text-emerald-700' },
-  driver: { color: 'sky', icon: '🚚', label: 'Driver', bgClass: 'bg-sky-50 text-sky-700' },
+  admin: { color: 'purple', IconComponent: HiOutlineShieldCheck, icon: '🛡️', label: 'Admin', bgClass: 'bg-purple-50 text-purple-700' },
+  seller: { color: 'amber', IconComponent: HiOutlineBuildingStorefront, icon: '🏪', label: 'Seller', bgClass: 'bg-amber-50 text-amber-700' },
+  buyer: { color: 'emerald', IconComponent: HiOutlineShoppingBag, icon: '🛒', label: 'Buyer', bgClass: 'bg-emerald-50 text-emerald-700' },
+  driver: { color: 'sky', IconComponent: HiOutlineTruck, icon: '🚚', label: 'Driver', bgClass: 'bg-sky-50 text-sky-700' },
 };
 
 /**

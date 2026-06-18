@@ -45,9 +45,6 @@ export default function Footer() {
           <p className="text-xs text-surface-500">
             &copy; {new Date().getFullYear()} SEAPEDIA. Built for COMPFEST 18 SE Academy.
           </p>
-          <p className="text-xs text-surface-500">
-            Made with ❤️ in Indonesia
-          </p>
         </div>
       </div>
     </footer>

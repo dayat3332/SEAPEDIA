@@ -10,5 +10,6 @@ router.get('/metrics', adminController.getMetrics);
 router.get('/users', adminController.getAllUsers);
 router.get('/logs', adminController.getSystemLogs);
 router.post('/simulate-next-day', adminController.simulateNextDay);
+router.delete('/users/:id', adminController.deleteUser);
 
 module.exports = router;

@@ -37,9 +37,23 @@ const simulateNextDay = async (req, res, next) => {
   }
 };
 
+const deleteUser = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const success = await adminService.deleteUser(id);
+    if (!success) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+    res.json({ message: 'User deleted successfully.' });
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   getMetrics,
   getAllUsers,
   getSystemLogs,
-  simulateNextDay
+  simulateNextDay,
+  deleteUser
 };

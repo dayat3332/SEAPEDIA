@@ -88,4 +88,5 @@ export const adminService = {
   getUsers: () => api.get('/admin/users'),
   getLogs: () => api.get('/admin/logs'),
   simulateNextDay: (days) => api.post('/admin/simulate-next-day', { days }),
+  deleteUser: (id) => api.delete(`/admin/users/${id}`),
 };

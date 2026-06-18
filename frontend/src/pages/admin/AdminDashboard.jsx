@@ -131,6 +131,21 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleDeleteUser = async (id) => {
+    if (id === user.id) {
+      return toast.error('You cannot delete your own admin account!');
+    }
+    if (!window.confirm('Are you sure you want to delete this user? This will cascade delete their store, products, wallet, and orders.')) return;
+    try {
+      await adminService.deleteUser(id);
+      toast.success('User deleted successfully.');
+      setUsersList((prev) => prev.filter((u) => u.id !== id));
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.message || 'Failed to delete user.');
+    }
+  };
+
   const handleCreateDiscount = async (e) => {
     e.preventDefault();
     if (!code.trim() || !discountValue || !validFrom || !validUntil) {
@@ -482,6 +497,7 @@ export default function AdminDashboard() {
                     <th className="px-6 py-3.5">Contact Details</th>
                     <th className="px-6 py-3.5">Assigned Roles</th>
                     <th className="px-6 py-3.5">Register Date</th>
+                    <th className="px-6 py-3.5 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-surface-150 text-surface-700">
@@ -501,6 +517,19 @@ export default function AdminDashboard() {
                         ))}
                       </td>
                       <td className="px-6 py-4 text-xs text-surface-400">{formatDate(usr.created_at)}</td>
+                      <td className="px-6 py-4 text-right">
+                        {usr.id !== user?.id ? (
+                          <button
+                            onClick={() => handleDeleteUser(usr.id)}
+                            className="p-1.5 text-red-650 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                            title="Delete User"
+                          >
+                            <HiOutlineTrash size={18} />
+                          </button>
+                        ) : (
+                          <span className="text-xs text-surface-400 italic">Self (Admin)</span>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>

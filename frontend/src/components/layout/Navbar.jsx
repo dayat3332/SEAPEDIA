@@ -100,8 +100,9 @@ export default function Navbar() {
             {isAuthenticated ? (
               <>
                 {activeRole && (
-                  <Badge variant={activeRole}>
-                    {roleConfig?.icon} {roleConfig?.label}
+                  <Badge variant={activeRole} className="flex items-center gap-1">
+                    {roleConfig?.IconComponent ? <roleConfig.IconComponent size={14} /> : roleConfig?.icon}
+                    <span>{roleConfig?.label}</span>
                   </Badge>
                 )}
                 {activeRole === 'buyer' && (

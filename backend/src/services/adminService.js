@@ -175,9 +175,18 @@ const simulateNextDay = async (days = 1) => {
   }
 };
 
+/**
+ * Delete a user by ID
+ */
+const deleteUser = async (id) => {
+  const [result] = await pool.query('DELETE FROM users WHERE id = ?', [id]);
+  return result.affectedRows > 0;
+};
+
 module.exports = {
   getMetrics,
   getAllUsers,
   getSystemLogs,
-  simulateNextDay
+  simulateNextDay,
+  deleteUser
 };

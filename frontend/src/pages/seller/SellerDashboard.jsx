@@ -621,7 +621,10 @@ export default function SellerDashboard() {
         <div>
           <div className="flex items-center gap-3 mb-2">
             <h1 className="text-2xl font-bold text-surface-900">Seller Dashboard</h1>
-            <Badge variant="seller">{ROLE_CONFIG.seller.icon} Seller</Badge>
+            <Badge variant="seller" className="flex items-center gap-1">
+              {ROLE_CONFIG.seller.IconComponent ? <ROLE_CONFIG.seller.IconComponent size={14} /> : ROLE_CONFIG.seller.icon}
+              <span>Seller</span>
+            </Badge>
           </div>
           <p className="text-surface-500">Welcome back, {user?.full_name}. Manage your store and products here.</p>
         </div>
@@ -678,7 +681,7 @@ export default function SellerDashboard() {
 
       {!store ? (
         <Card className="p-10 text-center max-w-2xl mx-auto border-dashed border-2 border-surface-300">
-          <HiOutlineBuildingStorefront className="mx-auto text-amber-500 mb-4 animate-bounce" size={48} />
+          <HiOutlineBuildingStorefront className="mx-auto text-amber-500 mb-4" size={48} />
           <h3 className="text-xl font-bold text-surface-900 mb-2">Create Your Store Profile</h3>
           <p className="text-sm text-surface-500 mb-6 leading-relaxed">
             Before listing products and selling them on SEAPEDIA, you must define your store identity. Store names must be unique.
