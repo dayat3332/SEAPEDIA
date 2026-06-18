@@ -14,8 +14,15 @@ app.use(helmet({
 }));
 
 // CORS
+const allowedOrigins = [env.CORS_ORIGIN, 'http://localhost:5173'];
 app.use(cors({
-  origin: env.CORS_ORIGIN,
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin) || origin.endsWith('.trycloudflare.com')) {
+      return callback(null, true);
+    }
+    callback(new Error('Not allowed by CORS'));
+  },
   credentials: true,
 }));
 
