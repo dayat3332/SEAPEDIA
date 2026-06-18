@@ -1,0 +1,42 @@
+# Node
+node_modules/
+dist/
+build/
+
+# Environment
+.env
+.env.local
+.env.production
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Docker
+seapedia_mysql_data/
+
+# Misc
+requirements.txt
+*.pdf
+.meta-panel-trigger
+meta.bat
+
+# Uploads
+backend/uploads/*
+!backend/uploads/.gitkeep
+backend/public/uploads/*
+!backend/public/uploads/.gitkeep
+
+# Database backups
+*.sql
+*.dump
