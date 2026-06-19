@@ -36,10 +36,19 @@ const migrate = async () => {
     console.log('🎉 Migration complete!');
   } catch (err) {
     console.error('❌ Migration failed:', err.message);
+    throw err;
   } finally {
     conn.release();
-    process.exit(0);
   }
 };
 
-migrate();
+if (require.main === module) {
+  migrate()
+    .then(() => process.exit(0))
+    .catch((err) => {
+      console.error(err);
+      process.exit(1);
+    });
+} else {
+  module.exports = migrate;
+}
