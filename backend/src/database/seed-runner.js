@@ -74,7 +74,7 @@ async function seed() {
     const userIdMap = {};
     for (const u of users) {
       const [result] = await conn.query(
-        'INSERT INTO users (username, email, phone, password_hash, full_name) VALUES (?, ?, ?, ?, ?)',
+        'INSERT INTO users (username, email, phone, password_hash, full_name, is_verified) VALUES (?, ?, ?, ?, ?, TRUE)',
         [u.username, u.email, u.phone, hash, u.fullName]
       );
       userIdMap[u.username] = result.insertId;
