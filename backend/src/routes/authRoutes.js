@@ -5,7 +5,7 @@ const { auth } = require('../middleware/auth');
 const { registerLimiter } = require('../middleware/rateLimiter');
 const authController = require('../controllers/authController');
 
-// POST /api/auth/register (Rate Limited: 5 req/hour per IP)
+// POST /api/auth/register (Rate Limited: 3 req/hour per IP)
 router.post(
   '/register',
   registerLimiter,
@@ -31,7 +31,22 @@ router.post(
   authController.register
 );
 
-// POST /api/auth/verify-email
+// POST /api/auth/verify-otp (juga mendukung /verify-email)
+router.post(
+  '/verify-otp',
+  [
+    body('email').trim().isEmail().withMessage('Valid email is required.'),
+    body('otpCode')
+      .trim()
+      .isLength({ min: 6, max: 6 })
+      .isNumeric()
+      .withMessage('OTP code must be a 6-digit number.'),
+    validate,
+  ],
+  authController.verifyEmail
+);
+
+// Alias: /verify-email juga tetap bisa dipakai
 router.post(
   '/verify-email',
   [

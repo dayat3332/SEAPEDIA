@@ -44,8 +44,8 @@ const register = async ({ username, email, phone, password, fullName, roles }) =
       [username, email]
     );
     if (existing.length > 0) {
-      const err = new Error('Username or email already exists.');
-      err.statusCode = 409;
+      const err = new Error('Email sudah terdaftar. Gunakan email lain atau login.');
+      err.statusCode = 400;
       throw err;
     }
 
@@ -57,9 +57,9 @@ const register = async ({ username, email, phone, password, fullName, roles }) =
     const otpCode = generateOTP();
     const otpExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 jam dari sekarang
 
-    // Insert user with is_verified = FALSE and verification token
+    // Insert user with is_verified = FALSE and verification OTP
     const [result] = await conn.query(
-      `INSERT INTO users (username, email, phone, password_hash, full_name, is_verified, verification_token, token_expires_at) 
+      `INSERT INTO users (username, email, phone, password_hash, full_name, is_verified, verification_otp, token_expires_at) 
        VALUES (?, ?, ?, ?, ?, FALSE, ?, ?)`,
       [username, email, phone || null, passwordHash, fullName, otpCode, otpExpiry]
     );
@@ -108,7 +108,7 @@ const register = async ({ username, email, phone, password, fullName, roles }) =
  */
 const verifyEmail = async ({ email, otpCode }) => {
   const [users] = await pool.query(
-    'SELECT id, username, verification_token, token_expires_at, is_verified FROM users WHERE email = ?',
+    'SELECT id, username, verification_otp, token_expires_at, is_verified FROM users WHERE email = ?',
     [email]
   );
 
@@ -126,7 +126,7 @@ const verifyEmail = async ({ email, otpCode }) => {
     throw err;
   }
 
-  if (user.verification_token !== otpCode) {
+  if (user.verification_otp !== otpCode) {
     const err = new Error('Kode OTP tidak valid.');
     err.statusCode = 400;
     throw err;
@@ -140,7 +140,7 @@ const verifyEmail = async ({ email, otpCode }) => {
 
   // Update user: set verified, clear token
   await pool.query(
-    'UPDATE users SET is_verified = TRUE, verification_token = NULL, token_expires_at = NULL WHERE id = ?',
+    'UPDATE users SET is_verified = TRUE, verification_otp = NULL, token_expires_at = NULL WHERE id = ?',
     [user.id]
   );
 
@@ -174,7 +174,7 @@ const resendOTP = async ({ email }) => {
   const otpExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
   await pool.query(
-    'UPDATE users SET verification_token = ?, token_expires_at = ? WHERE id = ?',
+    'UPDATE users SET verification_otp = ?, token_expires_at = ? WHERE id = ?',
     [otpCode, otpExpiry, user.id]
   );
 

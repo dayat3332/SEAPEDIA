@@ -2,11 +2,11 @@ const rateLimit = require('express-rate-limit');
 
 /**
  * Rate limiter khusus untuk route register.
- * Membatasi 5 request per jam dari satu IP address.
+ * Membatasi 3 request per jam dari satu IP address.
  */
 const registerLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 jam
-  max: 5,
+  max: 3,
   standardHeaders: true,
   legacyHeaders: false,
   handler: (req, res) => {

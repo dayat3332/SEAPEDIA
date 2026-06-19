@@ -2,18 +2,28 @@ const nodemailer = require('nodemailer');
 const env = require('../config/env');
 
 /**
- * Konfigurasi transporter Nodemailer.
- * Menggunakan Gmail SMTP dengan App Password.
- * Pastikan variabel SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS
- * sudah diset di file .env.
+ * ================================================================
+ * KONFIGURASI TRANSPORTER NODEMAILER - Gmail SMTP
+ * ================================================================
+ * 
+ * ⚠️  PENTING: Gunakan "Google App Password", BUKAN password email biasa!
+ * 
+ * Cara mendapatkan Google App Password:
+ * 1. Buka https://myaccount.google.com/security
+ * 2. Aktifkan "2-Step Verification" terlebih dahulu
+ * 3. Buka https://myaccount.google.com/apppasswords
+ * 4. Buat App Password baru (pilih nama bebas, misal "SEAPEDIA")
+ * 5. Google akan memberikan password 16 karakter (contoh: "abcd efgh ijkl mnop")
+ * 6. Masukkan password tersebut ke SMTP_PASS di file .env
+ * 
+ * ⚠️  JANGAN gunakan password login Gmail biasa — akan ditolak oleh Google!
+ * ================================================================
  */
 const transporter = nodemailer.createTransport({
-  host: env.SMTP_HOST,
-  port: env.SMTP_PORT,
-  secure: env.SMTP_PORT === 465, // true untuk port 465, false untuk port lain
+  service: 'gmail', // Menggunakan service Gmail (otomatis set host & port)
   auth: {
-    user: env.SMTP_USER,
-    pass: env.SMTP_PASS,
+    user: env.SMTP_USER,  // Email Gmail Anda (contoh: user@gmail.com)
+    pass: env.SMTP_PASS,  // Google App Password (BUKAN password biasa!)
   },
 });
 
