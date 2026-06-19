@@ -4,7 +4,7 @@ import { cartService } from '../../services';
 import { Card, Button, Spinner, Badge } from '../../components/ui';
 import { formatCurrency, getImageUrl } from '../../utils/helpers';
 import {
-  HiOutlineShoppingBag,
+  HiOutlineShoppingCart,
   HiOutlineTrash,
   HiOutlineBuildingStorefront,
   HiOutlineExclamationCircle,
@@ -95,14 +95,14 @@ export default function CartPage() {
   const storeName = hasItems ? cart.items[0].store_name : '';
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
+    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
       <h1 className="text-2xl font-bold text-surface-900 mb-8 flex items-center gap-2">
-        <HiOutlineShoppingBag /> Shopping Cart
+        <HiOutlineShoppingCart /> Shopping Cart
       </h1>
 
       {!hasItems ? (
         <Card className="p-12 text-center max-w-xl mx-auto">
-          <HiOutlineShoppingBag className="mx-auto text-surface-300 mb-4" size={60} />
+          <HiOutlineShoppingCart className="mx-auto text-surface-300 mb-4" size={60} />
           <h3 className="text-lg font-semibold text-surface-800 mb-2">Your cart is empty</h3>
           <p className="text-sm text-surface-500 mb-8">Go find some awesome products to fill your cart!</p>
           <Link to="/products">
@@ -121,9 +121,12 @@ export default function CartPage() {
                   Products from: <strong className="text-primary-700">{storeName}</strong>
                 </span>
               </div>
-              <Button size="xs" variant="outline" className="text-red-600 hover:bg-red-50" onClick={handleClearCart}>
+              <button
+                onClick={handleClearCart}
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-danger-500/20 bg-danger-50/40 text-xs font-semibold text-danger-700 hover:bg-danger-50 hover:text-danger-800 hover:border-danger-500/40 active:bg-danger-100 transition-all duration-200 cursor-pointer"
+              >
                 Clear Cart
-              </Button>
+              </button>
             </div>
 
             {/* List */}
@@ -133,7 +136,7 @@ export default function CartPage() {
                   {/* Image */}
                   <div className="w-20 h-20 rounded-xl bg-surface-100 overflow-hidden flex-shrink-0 flex items-center justify-center">
                     <img
-                      src={getImageUrl(item.image_url)}
+                       src={getImageUrl(item.image_url)}
                       alt={item.name}
                       className="w-full h-full object-cover"
                       onError={(e) => {
@@ -212,7 +215,7 @@ export default function CartPage() {
                   <span>Subtotal</span>
                   <span className="text-primary-700">{formatCurrency(subtotal)}</span>
                 </div>
-                <p className="text-[11px] text-surface-400 leading-normal pt-2">
+                <p className="text-xs text-surface-400 leading-normal pt-2">
                   PPN 12% and shipping delivery fees will be calculated on the next checkout step.
                 </p>
 
@@ -228,6 +231,6 @@ export default function CartPage() {
           </div>
         </div>
       )}
-    </div>
+    </main>
   );
 }

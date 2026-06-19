@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
   HiOutlineShoppingBag, 
+  HiOutlineShoppingCart,
   HiOutlineUser, 
   HiOutlineBars3, 
   HiXMark, 
@@ -110,7 +111,7 @@ export default function Navbar() {
                     to="/cart"
                     className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-surface-600 hover:text-surface-900 hover:bg-surface-50 transition-colors duration-150"
                   >
-                    <HiOutlineShoppingBag size={18} />
+                    <HiOutlineShoppingCart size={18} />
                     Cart
                   </Link>
                 )}
@@ -126,7 +127,7 @@ export default function Navbar() {
                     </div>
                     <div className="text-left">
                       <p className="text-sm font-semibold text-surface-800 leading-tight">{user?.full_name}</p>
-                      <p className="text-[10px] text-surface-400">@{user?.username}</p>
+                      <p className="text-xs text-surface-400">@{user?.username}</p>
                     </div>
                     <HiChevronDown className={`text-surface-400 w-4 h-4 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`} />
                   </button>

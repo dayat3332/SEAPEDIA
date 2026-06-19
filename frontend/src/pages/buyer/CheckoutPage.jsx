@@ -263,7 +263,7 @@ export default function CheckoutPage() {
   const insufficientBalance = paymentMethod === 'wallet' && parseFloat(wallet.balance) < total;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
+    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
       <Link to="/cart" className="inline-flex items-center gap-1.5 text-sm text-surface-500 hover:text-primary-600 transition-colors mb-6">
         <HiArrowLeft size={16} /> Back to Cart
       </Link>
@@ -279,9 +279,12 @@ export default function CheckoutPage() {
               <h3 className="font-bold text-surface-900 text-lg flex items-center gap-2">
                 <HiOutlineMapPin className="text-primary-600" /> 1. Shipping Address
               </h3>
-              <Button size="xs" variant="secondary" onClick={() => setAddressOpen(true)} className="flex items-center gap-1">
+              <button
+                onClick={() => setAddressOpen(true)}
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-primary-200 bg-primary-50/50 text-xs font-semibold text-primary-700 hover:bg-primary-50 hover:text-primary-800 hover:border-primary-300 active:bg-primary-100 transition-all duration-200 cursor-pointer"
+              >
                 <HiOutlinePlus size={14} /> Add Address
-              </Button>
+              </button>
             </div>
 
             {addresses.length === 0 ? (
@@ -302,14 +305,14 @@ export default function CheckoutPage() {
                     }`}
                   >
                     <div>
-                      <div className="flex items-center gap-2 mb-1.5">
-                        <span className="text-[10px] font-bold uppercase bg-surface-200 text-surface-700 px-2 py-0.5 rounded-full">
+                      <div className="flex items-center gap-1.5 mb-2.5">
+                        <Badge variant="default" size="xs" className="uppercase font-bold tracking-wider">
                           {addr.label}
-                        </span>
+                        </Badge>
                         {addr.is_default && (
-                          <span className="text-[10px] font-bold uppercase bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">
+                          <Badge variant="buyer" size="xs" className="uppercase font-bold tracking-wider">
                             Default
-                          </span>
+                          </Badge>
                         )}
                       </div>
                       <h4 className="font-bold text-surface-900 text-sm">{addr.recipient_name}</h4>
@@ -429,7 +432,7 @@ export default function CheckoutPage() {
                     />
                     <div>
                       <p className="text-xs font-bold text-surface-900">{pm.label}</p>
-                      <p className="text-[10px] text-surface-400 font-medium mt-0.5 leading-none">{pm.desc}</p>
+                      <p className="text-xs text-surface-400 font-medium mt-0.5 leading-none">{pm.desc}</p>
                     </div>
                   </div>
                 ))}
@@ -447,7 +450,7 @@ export default function CheckoutPage() {
                 </div>
                 <div className="p-3.5 rounded-xl bg-emerald-50/50 border border-emerald-100 flex items-center justify-between">
                   <div>
-                    <p className="text-[10px] text-emerald-600 font-semibold uppercase tracking-wider">Your Balance</p>
+                    <p className="text-xs text-emerald-600 font-semibold uppercase tracking-wider">Your Balance</p>
                     <p className="text-base font-bold text-emerald-950">{formatCurrency(wallet.balance)}</p>
                   </div>
                   {insufficientBalance && (
@@ -459,13 +462,13 @@ export default function CheckoutPage() {
 
             {/* QRIS / ATM info boxes */}
             {paymentMethod === 'qris' && (
-              <div className="p-3 mb-4 rounded-xl bg-primary-50/50 border border-primary-100 text-[10px] text-primary-700 leading-relaxed font-medium">
+              <div className="p-3 mb-4 rounded-xl bg-primary-50/50 border border-primary-100 text-xs text-primary-700 leading-relaxed font-medium">
                 ⚡ Scan QRIS akan langsung diproses. Struk digital lunas akan digenerate setelah Anda mengonfirmasi pesanan.
               </div>
             )}
 
             {paymentMethod === 'atm' && (
-              <div className="p-3 mb-4 rounded-xl bg-primary-50/50 border border-primary-100 text-[10px] text-primary-700 leading-relaxed font-medium">
+              <div className="p-3 mb-4 rounded-xl bg-primary-50/50 border border-primary-100 text-xs text-primary-700 leading-relaxed font-medium">
                 🏦 Nomor Virtual Account Mandiri/BCA Anda akan dicantumkan secara otomatis pada struk belanja setelah konfirmasi.
               </div>
             )}
@@ -476,9 +479,9 @@ export default function CheckoutPage() {
               {appliedDiscount ? (
                 <div className="p-3 bg-primary-50 border border-primary-200 rounded-xl flex items-center justify-between">
                   <div className="min-w-0">
-                    <p className="text-[10px] text-primary-700 font-bold uppercase">{appliedDiscount.type}</p>
+                    <p className="text-xs text-primary-700 font-bold uppercase">{appliedDiscount.type}</p>
                     <p className="text-xs font-extrabold text-primary-900 truncate">{appliedDiscount.code}</p>
-                    <p className="text-[10px] text-emerald-600 font-medium">
+                    <p className="text-xs text-emerald-600 font-medium">
                       Discount: -{formatCurrency(appliedDiscount.discountAmount)}
                     </p>
                   </div>
@@ -533,7 +536,7 @@ export default function CheckoutPage() {
 
             {/* Warning if insufficient */}
             {insufficientBalance && (
-              <div className="p-3 bg-red-50 border border-red-100 rounded-xl text-[11px] text-red-700 leading-normal mb-4">
+              <div className="p-3 bg-red-50 border border-red-100 rounded-xl text-xs text-red-700 leading-normal mb-4">
                 Your wallet balance is insufficient. Please <strong>top up</strong> your wallet with at least {formatCurrency(total - parseFloat(wallet.balance))} to place this order.
               </div>
             )}
@@ -663,17 +666,17 @@ export default function CheckoutPage() {
               {/* Receipt Header */}
               <div className="text-center pb-4 border-b border-dashed border-surface-300">
                 <h4 className="text-sm font-extrabold text-surface-900 tracking-tight mb-1">SEAPEDIA INVOICE</h4>
-                <p className="text-[10px] text-surface-400">Order No: {receiptData.orderNumber}</p>
-                <p className="text-[10px] text-surface-400">Tanggal: {receiptData.date}</p>
+                <p className="text-xs text-surface-400">Order No: {receiptData.orderNumber}</p>
+                <p className="text-xs text-surface-400">Tanggal: {receiptData.date}</p>
               </div>
 
               {/* Store & Destination */}
               <div>
                 <p className="font-bold text-surface-900">Toko: {receiptData.storeName}</p>
-                <p className="text-[10px] text-surface-500 mt-1">
+                <p className="text-xs text-surface-500 mt-1">
                   Penerima: {receiptData.address?.recipient_name} ({receiptData.address?.phone})
                 </p>
-                <p className="text-[10px] text-surface-450 leading-relaxed mt-0.5">
+                <p className="text-xs text-surface-450 leading-relaxed mt-0.5">
                   {receiptData.address?.full_address}
                 </p>
               </div>
@@ -684,7 +687,7 @@ export default function CheckoutPage() {
                   <div key={idx} className="flex justify-between items-start gap-4">
                     <div className="flex-1">
                       <p className="font-medium text-surface-800 line-clamp-1">{item.name}</p>
-                      <p className="text-[10px] text-surface-400">{item.quantity} x {formatCurrency(item.price)}</p>
+                      <p className="text-xs text-surface-400">{item.quantity} x {formatCurrency(item.price)}</p>
                     </div>
                     <span className="font-semibold text-surface-800 flex-shrink-0">
                       {formatCurrency(parseFloat(item.price) * item.quantity)}
@@ -730,8 +733,8 @@ export default function CheckoutPage() {
                       <path d="M9 9h2v2H9V9zm4 0h2v4h-2V9zm-4 4h2v2H9v-2zm4 4h2v2h-2v-2zm-4 4h2v4H9v-4zm4 2h2v2h-2v-2zm-4 4h2v2H9v-2zm12-21h7v7h-7V0zm1 1v5h5V1h-5zm1 1h3v3h-3V2zm-3 7h2v2h-2V9zm4 0h4v2h-4V9zm-4 4h2v4h-2v-4zm4 2h4v2h-4v-2zm-4 4h2v2h-2v-2zm4 0h2v4h-2v-4zm4 2h2v2h-2v-2z" fill="currentColor"/>
                     </svg>
                   </div>
-                  <p className="text-[9px] text-surface-400 font-sans">QRIS Danamon/Permata</p>
-                  <div className="px-4 py-0.5 mt-2 border-2 border-emerald-500 text-emerald-600 font-extrabold text-[10px] tracking-widest rounded uppercase transform -rotate-1">
+                  <p className="text-xs text-surface-400 font-sans">QRIS Danamon/Permata</p>
+                  <div className="inline-block px-5 py-1.5 mt-2 border-2 border-emerald-500/80 bg-emerald-500/5 text-emerald-600 font-black text-xs tracking-widest rounded-lg uppercase transform -rotate-3 shadow-[0_0_12px_rgba(16,185,129,0.12)]">
                     LUNAS (QRIS)
                   </div>
                 </div>
@@ -740,11 +743,11 @@ export default function CheckoutPage() {
               {receiptData.paymentMethod === 'atm' && (
                 <div className="text-center pt-2 pb-1 space-y-1.5 border-t border-dashed border-surface-300">
                   <div className="bg-white p-2.5 rounded-xl border border-surface-200 font-sans text-left">
-                    <p className="text-[9px] text-surface-400 font-bold uppercase">BCA Virtual Account</p>
+                    <p className="text-xs text-surface-400 font-bold uppercase">BCA Virtual Account</p>
                     <p className="text-sm font-extrabold text-surface-850 tracking-wider mt-0.5">88012 081200000007</p>
-                    <p className="text-[8px] text-surface-400 mt-1 leading-normal">Silakan selesaikan pembayaran via ATM atau Mobile Banking.</p>
+                    <p className="text-xs text-surface-400 mt-1 leading-normal">Silakan selesaikan pembayaran via ATM atau Mobile Banking.</p>
                   </div>
-                  <div className="inline-block px-4 py-0.5 border-2 border-emerald-500 text-emerald-600 font-extrabold text-[10px] tracking-widest rounded uppercase transform -rotate-1">
+                  <div className="inline-block px-5 py-1.5 border-2 border-emerald-500/80 bg-emerald-500/5 text-emerald-600 font-black text-xs tracking-widest rounded-lg uppercase transform -rotate-3 shadow-[0_0_12px_rgba(16,185,129,0.12)]">
                     LUNAS (VA TRANSFER)
                   </div>
                 </div>
@@ -752,7 +755,7 @@ export default function CheckoutPage() {
 
               {receiptData.paymentMethod === 'wallet' && (
                 <div className="flex justify-center pt-2 border-t border-dashed border-surface-300">
-                  <div className="px-5 py-1 border-2 border-emerald-500 text-emerald-600 font-extrabold text-xs tracking-widest rounded uppercase transform -rotate-2">
+                  <div className="inline-block px-5 py-1.5 border-2 border-emerald-500/80 bg-emerald-500/5 text-emerald-600 font-black text-xs tracking-widest rounded-lg uppercase transform -rotate-3 shadow-[0_0_12px_rgba(16,185,129,0.12)]">
                     LUNAS (E-WALLET)
                   </div>
                 </div>
@@ -784,6 +787,6 @@ export default function CheckoutPage() {
           </div>
         )}
       </Modal>
-    </div>
+    </main>
   );
 }

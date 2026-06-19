@@ -71,8 +71,9 @@ export default function DashboardHeader() {
 
             {activeRole && (
               <div className="flex items-center gap-2 pl-4 border-l border-surface-200">
-                <Badge variant={activeRole} size="md">
-                  <span className="mr-1.5">{roleConfig?.icon}</span> {roleConfig?.label} Dashboard
+                <Badge variant={activeRole} size="md" className="flex items-center gap-1">
+                  {roleConfig?.IconComponent && <roleConfig.IconComponent size={15} />}
+                  <span>{roleConfig?.label} Dashboard</span>
                 </Badge>
               </div>
             )}
@@ -92,7 +93,7 @@ export default function DashboardHeader() {
               {/* User Details */}
               <div className="text-left hidden sm:block">
                 <p className="text-sm font-semibold text-surface-800 leading-tight">{user?.full_name}</p>
-                <p className="text-[10px] text-surface-450">@{user?.username}</p>
+                <p className="text-xs text-surface-450">@{user?.username}</p>
               </div>
               
               <HiChevronDown className={`text-surface-400 w-4 h-4 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`} />

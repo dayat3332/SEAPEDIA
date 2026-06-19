@@ -34,6 +34,10 @@ export default function DriverDashboard() {
   const [jobDetailOpen, setJobDetailOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
+  // Confirm Complete Modal State
+  const [confirmCompleteOpen, setConfirmCompleteOpen] = useState(false);
+  const [pendingCompleteId, setPendingCompleteId] = useState(null);
+
   useEffect(() => {
     fetchDashboardData();
   }, []);
@@ -92,20 +96,23 @@ export default function DriverDashboard() {
   };
 
   const handleCompleteJob = async (jobId) => {
-    if (!window.confirm('Are you sure you have successfully delivered this package to the recipient?')) {
-      return;
-    }
-
     try {
       setActionLoading(true);
       const res = await deliveryService.completeJob(jobId);
       toast.success(`Delivery completed! You earned ${formatCurrency(res.data.data.earning)}.`);
+      setConfirmCompleteOpen(false);
+      setPendingCompleteId(null);
       fetchDashboardData();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to complete delivery.');
     } finally {
       setActionLoading(false);
     }
+  };
+
+  const confirmCompleteJob = (jobId) => {
+    setPendingCompleteId(jobId);
+    setConfirmCompleteOpen(true);
   };
 
   const openJobDetail = (job) => {
@@ -135,7 +142,7 @@ export default function DriverDashboard() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
+    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
       {/* Header */}
       <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -208,7 +215,7 @@ export default function DriverDashboard() {
                       <p className="text-xs text-surface-500">Picked up at: {formatDate(activeJob.picked_up_at)}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-[10px] text-surface-450 uppercase font-semibold">Your Earning</p>
+                      <p className="text-xs text-surface-450 uppercase font-semibold">Your Earning</p>
                       <p className="text-base font-extrabold text-emerald-600">{formatCurrency(activeJob.delivery_fee * 0.80)}</p>
                     </div>
                   </div>
@@ -236,7 +243,7 @@ export default function DriverDashboard() {
 
                   <Button
                     fullWidth
-                    onClick={() => handleCompleteJob(activeJob.id)}
+                    onClick={() => confirmCompleteJob(activeJob.id)}
                     loading={actionLoading}
                     disabled={actionLoading}
                     className="flex items-center justify-center gap-2"
@@ -286,18 +293,18 @@ export default function DriverDashboard() {
                       <div className="flex justify-between items-start gap-4 pb-3 border-b border-surface-100 mb-4">
                         <div>
                           <p className="font-bold text-surface-950 text-sm">{job.order_number}</p>
-                          <p className="text-[10px] text-surface-400 font-medium">{formatDate(job.created_at)}</p>
+                          <p className="text-xs text-surface-400 font-medium">{formatDate(job.created_at)}</p>
                         </div>
                         {getDeliveryMethodBadge(job.delivery_method)}
                       </div>
 
                       <div className="space-y-3 mb-6">
                         <div>
-                          <p className="text-[10px] uppercase font-bold text-surface-400">Pickup Merchant</p>
+                          <p className="text-xs uppercase font-bold text-surface-400">Pickup Merchant</p>
                           <p className="text-xs font-semibold text-surface-800">{job.store_name}</p>
                         </div>
                         <div>
-                          <p className="text-[10px] uppercase font-bold text-surface-400">Destination Address</p>
+                          <p className="text-xs uppercase font-bold text-surface-400">Destination Address</p>
                           <p className="text-xs text-surface-600 truncate">{job.delivery_address_snapshot.split(' | ')[2]}</p>
                         </div>
                       </div>
@@ -305,7 +312,7 @@ export default function DriverDashboard() {
 
                     <div className="pt-4 border-t border-surface-100 flex items-center justify-between gap-3">
                       <div>
-                        <p className="text-[9px] uppercase font-bold text-surface-400">Your Earning</p>
+                        <p className="text-xs uppercase font-bold text-surface-400">Your Earning</p>
                         <p className="text-sm font-extrabold text-emerald-600">{formatCurrency(job.delivery_fee * 0.80)}</p>
                       </div>
                       <Button size="sm" onClick={() => openJobDetail(job)}>
@@ -350,7 +357,7 @@ export default function DriverDashboard() {
                           <td className="px-6 py-4 font-semibold text-surface-800">{job.store_name}</td>
                           <td className="px-6 py-4">
                             <p className="text-xs font-semibold text-surface-800">{job.delivery_address_snapshot.split(' | ')[0]}</p>
-                            <p className="text-[10px] text-surface-400">{job.delivery_address_snapshot.split(' | ')[1]}</p>
+                            <p className="text-xs text-surface-400">{job.delivery_address_snapshot.split(' | ')[1]}</p>
                           </td>
                           <td className="px-6 py-4 text-right font-extrabold text-emerald-600">
                             +{formatCurrency(parseFloat(job.earning))}
@@ -381,11 +388,11 @@ export default function DriverDashboard() {
             <div className="space-y-4">
               <div className="p-3 bg-surface-50 border border-surface-200 rounded-xl flex items-center justify-between">
                 <div>
-                  <p className="text-[10px] text-surface-400 font-bold uppercase tracking-wider">Total Delivery Fee</p>
+                  <p className="text-xs text-surface-400 font-bold uppercase tracking-wider">Total Delivery Fee</p>
                   <p className="text-xs font-semibold text-surface-700">{formatCurrency(selectedJob.delivery_fee)}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">Driver Payout (80%)</p>
+                  <p className="text-xs text-emerald-600 font-bold uppercase tracking-wider">Driver Payout (80%)</p>
                   <p className="text-base font-extrabold text-emerald-600">{formatCurrency(selectedJob.delivery_fee * 0.80)}</p>
                 </div>
               </div>
@@ -430,6 +437,14 @@ export default function DriverDashboard() {
           </div>
         )}
       </Modal>
-    </div>
+      {/* CONFIRM COMPLETE JOB MODAL */}
+      <Modal isOpen={confirmCompleteOpen} onClose={() => setConfirmCompleteOpen(false)} title="Confirm Delivery Completion">
+        <p className="text-sm text-surface-600 mb-6">Are you sure you have successfully delivered this package to the recipient?</p>
+        <div className="flex justify-end gap-3">
+          <Button variant="secondary" onClick={() => setConfirmCompleteOpen(false)}>Cancel</Button>
+          <Button variant="primary" onClick={() => handleCompleteJob(pendingCompleteId)}>Yes, Package Delivered</Button>
+        </div>
+      </Modal>
+    </main>
   );
 }

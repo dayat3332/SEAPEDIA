@@ -9,7 +9,7 @@ import { formatDate } from '../../utils/helpers';
 import toast from 'react-hot-toast';
 
 // React Bits animation components
-import { SplitText, BlurText, GradientText, ScrollReveal, ScrollFloat, FadeContent } from '../../components/reactbits';
+import { SplitText, BlurText, ScrollReveal, ScrollFloat, FadeContent } from '../../components/reactbits';
 
 export default function HomePage() {
   const [products, setProducts] = useState([]);
@@ -106,18 +106,12 @@ export default function HomePage() {
             />
             <span className="block mt-2">
               <FadeContent delay={0.3} duration={0.5} blur>
-                <GradientText
-                  colors={['#e0e7ff', '#c7d2fe', '#818cf8', '#c7d2fe', '#e0e7ff']}
-                  animationSpeed={6}
-                  className="text-4xl sm:text-5xl lg:text-6xl font-extrabold"
-                >
-                  Marketplace Platform
-                </GradientText>
+                <span className="text-primary-300">Marketplace Platform</span>
               </FadeContent>
             </span>
           </h1>
 
-          <div className="text-lg text-slate-350 mb-10 max-w-2xl mx-auto leading-relaxed">
+          <div className="text-lg text-slate-300 mb-10 max-w-2xl mx-auto leading-relaxed">
             <BlurText
               text="SEAPEDIA bridges buyers, store owners, and delivery drivers in a single, unified marketplace system. Purchase items, manage stores, and fulfill deliveries seamlessly."
               delay={0.03}
@@ -143,23 +137,16 @@ export default function HomePage() {
           </FadeContent>
         </div>
 
-        {/* Bottom wave decoration */}
-        <div className="absolute bottom-0 left-0 right-0 translate-y-[1px]">
-          <svg viewBox="0 0 1440 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full block">
-            <path d="M0 100L60 91.7C120 83.3 240 66.7 360 58.3C480 50 600 50 720 54.2C840 58.3 960 66.7 1080 70.8C1200 75 1320 75 1380 75L1440 75V100H1380C1320 100 1200 100 1080 100C960 100 840 100 720 100C600 100 480 100 360 100C240 100 120 100 60 100H0Z" fill="var(--color-surface-50)" stroke="var(--color-surface-50)" strokeWidth="2"/>
-          </svg>
-        </div>
       </section>
 
       {/* Features Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <ScrollFloat className="text-center mb-14" threshold={0.3}>
-          <p className="text-xs font-semibold text-primary-600 uppercase tracking-wider mb-2">Platform Capabilities</p>
           <h2 className="text-3xl sm:text-4xl font-bold text-surface-900 mb-3 tracking-tight">Built for Everyone in the Ecosystem</h2>
           <p className="text-surface-500 max-w-xl mx-auto">A robust e-commerce suite featuring modular dashboard management.</p>
         </ScrollFloat>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
           {features.map((f, i) => (
             <ScrollReveal
               key={i}
@@ -170,12 +157,14 @@ export default function HomePage() {
               blur
               threshold={0.1}
             >
-              <div className="group p-6 rounded-2xl bg-white border border-surface-100 hover:border-surface-200 hover:shadow-md transition-all duration-200 h-full">
-                <div className="w-11 h-11 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center mb-5 group-hover:bg-primary-600 group-hover:text-white transition-all duration-200">
-                  <f.icon size={22} />
+              <div className="flex items-start gap-5 p-6 rounded-2xl border border-primary-100/50 bg-white/70 hover:bg-white hover:border-primary-300 hover:shadow-card-hover hover:-translate-y-1 transition-all duration-300">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 bg-primary-50/80 text-primary-600">
+                  <f.icon size={24} />
                 </div>
-                <h3 className="font-semibold text-surface-900 mb-2 text-base">{f.title}</h3>
-                <p className="text-sm text-surface-500 leading-relaxed">{f.desc}</p>
+                <div>
+                  <h3 className="font-bold text-surface-900 mb-1.5 text-lg">{f.title}</h3>
+                  <p className="text-sm text-surface-500 leading-relaxed font-medium">{f.desc}</p>
+                </div>
               </div>
             </ScrollReveal>
           ))}
@@ -187,7 +176,6 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <ScrollFloat className="flex items-end justify-between mb-10" threshold={0.3}>
             <div>
-              <p className="text-xs font-semibold text-primary-600 uppercase tracking-wider mb-2">Marketplace Catalog</p>
               <h2 className="text-3xl sm:text-4xl font-bold text-surface-900 tracking-tight">Featured Products</h2>
               <p className="text-surface-500 mt-2">Discover quality products listed by our verified store owners.</p>
             </div>
@@ -231,7 +219,6 @@ export default function HomePage() {
       {/* Reviews Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 overflow-hidden">
         <ScrollFloat className="text-center mb-12" threshold={0.3}>
-          <p className="text-xs font-semibold text-primary-600 uppercase tracking-wider mb-2">Testimonials</p>
           <h2 className="text-3xl sm:text-4xl font-bold text-surface-900 mb-4 tracking-tight">User Feedback</h2>
           <div className="flex items-center justify-center gap-3">
             <RatingStars rating={Math.round(reviewStats.averageRating)} size={18} />
@@ -279,7 +266,7 @@ export default function HomePage() {
                             </div>
                             <div>
                               <p className="font-bold text-surface-900 text-sm">{review.reviewer_name}</p>
-                              <p className="text-[10px] text-surface-400 font-medium">{formatDate(review.created_at)}</p>
+                              <p className="text-xs text-surface-400 font-medium">{formatDate(review.created_at)}</p>
                             </div>
                           </div>
                           <RatingStars rating={review.rating} size={14} />
@@ -291,9 +278,12 @@ export default function HomePage() {
                 </div>
               ))
             ) : (
-              <div className="w-full text-center py-12 bg-white rounded-2xl border border-surface-100">
-                <HiStar className="mx-auto text-surface-300 mb-3" size={40} />
-                <p className="text-surface-500">No reviews yet. Be the first to share your experience!</p>
+              <div className="w-full text-center py-16 px-4 bg-gradient-to-br from-primary-50/20 via-white to-indigo-50/20 rounded-2xl border border-primary-100/40 shadow-sm flex flex-col items-center justify-center">
+                <div className="w-14 h-14 rounded-full bg-primary-50 flex items-center justify-center text-primary-500 mb-4 animate-pulse">
+                  <HiStar size={26} />
+                </div>
+                <h4 className="text-lg font-bold text-surface-900 mb-1">No reviews yet</h4>
+                <p className="text-sm text-surface-500 max-w-sm">Be the first to share your experience using SEAPEDIA with the community!</p>
               </div>
             )}
           </div>
@@ -317,14 +307,12 @@ export default function HomePage() {
             distance={20}
             threshold={0.05}
           >
-            <Button
-              size="lg"
+            <button
               onClick={() => setIsReviewModalOpen(true)}
-              className="shadow-sm hover:shadow-md transition-all duration-200"
+              className="inline-flex items-center justify-center px-8 py-3.5 rounded-xl bg-primary-600 text-white font-semibold text-sm hover:bg-primary-700 shadow-md hover:shadow-lg hover:shadow-primary-600/10 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 hover:-translate-y-0.5 active:bg-primary-800 transition-all duration-300 cursor-pointer"
             >
-              <HiStar className="text-amber-400 mr-2" size={18} />
               Write a Review
-            </Button>
+            </button>
           </ScrollReveal>
         </div>
       </section>
@@ -376,7 +364,12 @@ export default function HomePage() {
             >
               Cancel
             </Button>
-            <Button type="submit" loading={submitting} disabled={submitting}>
+            <Button
+              type="submit"
+              loading={submitting}
+              disabled={submitting}
+              className="hover:shadow-lg hover:shadow-primary-600/10 hover:-translate-y-0.5 transition-all duration-300"
+            >
               Submit Review
             </Button>
           </div>

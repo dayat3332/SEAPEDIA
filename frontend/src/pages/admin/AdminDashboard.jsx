@@ -59,6 +59,11 @@ export default function AdminDashboard() {
   const [simulationDays, setSimulationDays] = useState('1');
   const [simulating, setSimulating] = useState(false);
 
+  // Confirm Delete States
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteType, setDeleteType] = useState('user'); // user or review
+  const [pendingDeleteId, setPendingDeleteId] = useState(null);
+
   const handleSimulateTime = async () => {
     if (!simulationDays || isNaN(simulationDays) || parseInt(simulationDays, 10) <= 0) {
       return toast.error('Please enter a valid number of days.');
@@ -120,11 +125,11 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteReview = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this review?')) return;
     try {
       await reviewService.deleteReview(id);
       toast.success('Review deleted successfully.');
       setReviewsList((prev) => prev.filter((r) => r.id !== id));
+      setDeleteConfirmOpen(false);
     } catch (err) {
       console.error(err);
       toast.error(err.response?.data?.message || 'Failed to delete review.');
@@ -135,14 +140,28 @@ export default function AdminDashboard() {
     if (id === user.id) {
       return toast.error('You cannot delete your own admin account!');
     }
-    if (!window.confirm('Are you sure you want to delete this user? This will cascade delete their store, products, wallet, and orders.')) return;
     try {
       await adminService.deleteUser(id);
       toast.success('User deleted successfully.');
       setUsersList((prev) => prev.filter((u) => u.id !== id));
+      setDeleteConfirmOpen(false);
     } catch (err) {
       console.error(err);
       toast.error(err.response?.data?.message || 'Failed to delete user.');
+    }
+  };
+
+  const confirmDelete = (id, type) => {
+    setPendingDeleteId(id);
+    setDeleteType(type);
+    setDeleteConfirmOpen(true);
+  };
+
+  const executeDelete = () => {
+    if (deleteType === 'user') {
+      handleDeleteUser(pendingDeleteId);
+    } else {
+      handleDeleteReview(pendingDeleteId);
     }
   };
 
@@ -216,7 +235,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
+    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
       {/* Header */}
       <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -389,7 +408,7 @@ export default function AdminDashboard() {
                       <div className="flex justify-between items-start pb-3 border-b border-surface-100 mb-4">
                         <div>
                           <p className="font-extrabold text-primary-700 text-base">{v.code}</p>
-                          <p className="text-[10px] text-surface-400 font-medium">Created: {formatDate(v.created_at)}</p>
+                          <p className="text-xs text-surface-400 font-medium">Created: {formatDate(v.created_at)}</p>
                         </div>
                         <Badge variant={v.is_active ? 'success' : 'danger'}>
                           {v.is_active ? 'Active' : 'Inactive'}
@@ -452,7 +471,7 @@ export default function AdminDashboard() {
                       <div className="flex justify-between items-start pb-3 border-b border-surface-100 mb-4">
                         <div>
                           <p className="font-extrabold text-accent-600 text-base">{p.code}</p>
-                          <p className="text-[10px] text-surface-400 font-medium">Created: {formatDate(p.created_at)}</p>
+                          <p className="text-xs text-surface-400 font-medium">Created: {formatDate(p.created_at)}</p>
                         </div>
                         <Badge variant={p.is_active ? 'success' : 'danger'}>
                           {p.is_active ? 'Active' : 'Inactive'}
@@ -520,7 +539,7 @@ export default function AdminDashboard() {
                       <td className="px-6 py-4 text-right">
                         {usr.id !== user?.id ? (
                           <button
-                            onClick={() => handleDeleteUser(usr.id)}
+                            onClick={() => confirmDelete(usr.id, 'user')}
                             className="p-1.5 text-red-650 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                             title="Delete User"
                           >
@@ -573,7 +592,7 @@ export default function AdminDashboard() {
                         </td>
                         <td className="px-6 py-4 text-right whitespace-nowrap">
                           <button
-                            onClick={() => handleDeleteReview(rev.id)}
+                            onClick={() => confirmDelete(rev.id, 'review')}
                             className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                             title="Delete Review"
                           >
@@ -762,6 +781,18 @@ export default function AdminDashboard() {
           </div>
         )}
       </Modal>
-    </div>
+      {/* CONFIRM DELETE MODAL */}
+      <Modal isOpen={deleteConfirmOpen} onClose={() => setDeleteConfirmOpen(false)} title="Confirm Destruction">
+        <p className="text-sm text-surface-600 mb-6">
+          {deleteType === 'user' 
+            ? 'Are you sure you want to delete this user? This will cascade delete their store, products, wallet, and orders. This action cannot be undone.'
+            : 'Are you sure you want to permanently delete this application review? This action cannot be undone.'}
+        </p>
+        <div className="flex justify-end gap-3">
+          <Button variant="secondary" onClick={() => setDeleteConfirmOpen(false)}>Cancel</Button>
+          <Button variant="danger" onClick={executeDelete}>Delete permanently</Button>
+        </div>
+      </Modal>
+    </main>
   );
 }

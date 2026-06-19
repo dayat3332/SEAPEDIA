@@ -47,6 +47,10 @@ export default function BuyerDashboard() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [loadingOrderDetails, setLoadingOrderDetails] = useState(false);
 
+  // Confirm Delete Modal
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState(null);
+
   useEffect(() => {
     fetchDashboardData();
   }, []);
@@ -148,15 +152,21 @@ export default function BuyerDashboard() {
   };
 
   const handleDeleteAddress = async (id) => {
-    if (!confirm('Are you sure you want to delete this address?')) return;
     try {
       await addressService.deleteAddress(id);
       toast.success('Address deleted successfully.');
+      setConfirmDeleteOpen(false);
+      setPendingDeleteId(null);
       const addressRes = await addressService.getAddresses();
       setAddresses(addressRes.data.data);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to delete address.');
     }
+  };
+
+  const confirmDeleteAddress = (id) => {
+    setPendingDeleteId(id);
+    setConfirmDeleteOpen(true);
   };
 
   const handleSetDefaultAddress = async (id) => {
@@ -228,7 +238,7 @@ export default function BuyerDashboard() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
+    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
@@ -393,15 +403,17 @@ export default function BuyerDashboard() {
                   <Card key={addr.id} className={`p-6 border-2 relative overflow-hidden transition-all duration-200 ${
                     addr.is_default ? 'border-primary-500 bg-primary-50/5' : 'border-surface-200 hover:border-surface-300'
                   }`}>
-                    {addr.is_default && (
-                      <div className="absolute top-0 right-0 bg-primary-600 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl flex items-center gap-1 shadow-sm">
-                        <HiOutlineCheck size={12} /> Default
-                      </div>
-                    )}
                     <div className="mb-4">
-                      <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-surface-100 text-surface-600 mb-2">
-                        {addr.label}
-                      </span>
+                      <div className="flex items-center gap-1.5 mb-2.5">
+                        <Badge variant="default" size="xs" className="uppercase font-bold tracking-wider">
+                          {addr.label}
+                        </Badge>
+                        {addr.is_default && (
+                          <Badge variant="buyer" size="xs" className="uppercase font-bold tracking-wider">
+                            Default
+                          </Badge>
+                        )}
+                      </div>
                       <h4 className="font-bold text-surface-900 text-base">{addr.recipient_name}</h4>
                       <p className="text-sm text-surface-500 font-medium mb-2">{addr.phone}</p>
                       <p className="text-sm text-surface-600 leading-relaxed max-w-md">{addr.full_address}</p>
@@ -412,7 +424,7 @@ export default function BuyerDashboard() {
                         <Button variant="ghost" size="sm" onClick={() => openAddressModal(addr)} className="text-primary-600 hover:bg-primary-50 p-2 rounded-lg">
                           <HiOutlinePencilSquare size={18} />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleDeleteAddress(addr.id)} className="text-red-600 hover:bg-red-50 p-2 rounded-lg">
+                        <Button variant="ghost" size="sm" onClick={() => confirmDeleteAddress(addr.id)} className="text-red-600 hover:bg-red-50 p-2 rounded-lg">
                           <HiOutlineTrash size={18} />
                         </Button>
                       </div>
@@ -458,9 +470,12 @@ export default function BuyerDashboard() {
                         <Badge variant={getStatusBadgeVariant(order.status)}>
                           {getStatusLabel(order.status)}
                         </Badge>
-                        <Button size="xs" variant="outline" onClick={() => viewOrderDetails(order.id)}>
+                        <button
+                          onClick={() => viewOrderDetails(order.id)}
+                          className="inline-flex items-center justify-center px-3 py-1 text-xs font-semibold rounded-lg border border-primary-200 bg-primary-50/50 text-primary-700 hover:bg-primary-50 hover:text-primary-800 hover:border-primary-300 active:bg-primary-100 transition-all duration-200 cursor-pointer"
+                        >
                           View Details
-                        </Button>
+                        </button>
                       </div>
                     </div>
 
@@ -582,6 +597,15 @@ export default function BuyerDashboard() {
         </form>
       </Modal>
 
+      {/* DELETE CONFIRM MODAL */}
+      <Modal isOpen={confirmDeleteOpen} onClose={() => setConfirmDeleteOpen(false)} title="Confirm Delete">
+        <p className="text-sm text-surface-600 mb-6">Are you sure you want to delete this address? This action cannot be undone.</p>
+        <div className="flex justify-end gap-3">
+          <Button variant="secondary" onClick={() => setConfirmDeleteOpen(false)}>Cancel</Button>
+          <Button variant="danger" onClick={() => handleDeleteAddress(pendingDeleteId)}>Delete Address</Button>
+        </div>
+      </Modal>
+
       {/* ORDER DETAILS MODAL */}
       <Modal isOpen={orderDetailOpen} onClose={() => setOrderDetailOpen(false)} title="Order Details">
         {loadingOrderDetails || !selectedOrder ? (
@@ -596,7 +620,7 @@ export default function BuyerDashboard() {
               <div>
                 <p className="text-xs text-surface-400">Order Number</p>
                 <p className="font-bold text-surface-900 text-base">{selectedOrder.order_number}</p>
-                <p className="text-[11px] text-surface-400">Placed on {formatDate(selectedOrder.created_at)}</p>
+                <p className="text-xs text-surface-400">Placed on {formatDate(selectedOrder.created_at)}</p>
               </div>
               <div>
                 <Badge variant={getStatusBadgeVariant(selectedOrder.status)} className="text-sm">
@@ -623,8 +647,8 @@ export default function BuyerDashboard() {
                       }`}>
                         {getStatusLabel(hist.status)}
                       </p>
-                      {hist.note && <p className="text-[11px] text-surface-500">{hist.note}</p>}
-                      <p className="text-[10px] text-surface-400">{formatDate(hist.created_at)}</p>
+                      {hist.note && <p className="text-xs text-surface-500">{hist.note}</p>}
+                      <p className="text-xs text-surface-400">{formatDate(hist.created_at)}</p>
                     </div>
                   </div>
                 ))}
@@ -730,6 +754,6 @@ export default function BuyerDashboard() {
           </div>
         )}
       </Modal>
-    </div>
+    </main>
   );
 }
