@@ -1,7 +1,9 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const pool = require('../config/database');
 const env = require('../config/env');
+const { sendVerificationEmail } = require('./emailService');
 
 /**
  * Generate a JWT token with user info and active role.
@@ -21,7 +23,15 @@ const generateToken = (user, activeRole = null) => {
 };
 
 /**
+ * Generate a random 6-digit OTP code.
+ */
+const generateOTP = () => {
+  return crypto.randomInt(100000, 999999).toString();
+};
+
+/**
  * Register a new user with selected roles.
+ * User starts as unverified. An OTP is sent to their email.
  */
 const register = async ({ username, email, phone, password, fullName, roles }) => {
   const conn = await pool.getConnection();
@@ -43,10 +53,15 @@ const register = async ({ username, email, phone, password, fullName, roles }) =
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    // Insert user
+    // Generate OTP verification code
+    const otpCode = generateOTP();
+    const otpExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 jam dari sekarang
+
+    // Insert user with is_verified = FALSE and verification token
     const [result] = await conn.query(
-      'INSERT INTO users (username, email, phone, password_hash, full_name) VALUES (?, ?, ?, ?, ?)',
-      [username, email, phone || null, passwordHash, fullName]
+      `INSERT INTO users (username, email, phone, password_hash, full_name, is_verified, verification_token, token_expires_at) 
+       VALUES (?, ?, ?, ?, ?, FALSE, ?, ?)`,
+      [username, email, phone || null, passwordHash, fullName, otpCode, otpExpiry]
     );
     const userId = result.insertId;
 
@@ -65,7 +80,21 @@ const register = async ({ username, email, phone, password, fullName, roles }) =
     }
 
     await conn.commit();
-    return { id: userId, username, email, fullName, roles };
+
+    // Send verification email (async, non-blocking untuk response)
+    sendVerificationEmail(email, otpCode).catch((err) => {
+      console.error('❌ Failed to send verification email:', err.message);
+    });
+
+    return {
+      id: userId,
+      username,
+      email,
+      fullName,
+      roles,
+      isVerified: false,
+      message: 'Kode OTP telah dikirim ke email Anda. Silakan verifikasi untuk mengaktifkan akun.',
+    };
   } catch (err) {
     await conn.rollback();
     throw err;
@@ -75,7 +104,88 @@ const register = async ({ username, email, phone, password, fullName, roles }) =
 };
 
 /**
+ * Verify email with OTP code.
+ */
+const verifyEmail = async ({ email, otpCode }) => {
+  const [users] = await pool.query(
+    'SELECT id, username, verification_token, token_expires_at, is_verified FROM users WHERE email = ?',
+    [email]
+  );
+
+  if (users.length === 0) {
+    const err = new Error('Email tidak ditemukan.');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  const user = users[0];
+
+  if (user.is_verified) {
+    const err = new Error('Akun ini sudah terverifikasi.');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  if (user.verification_token !== otpCode) {
+    const err = new Error('Kode OTP tidak valid.');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  if (new Date() > new Date(user.token_expires_at)) {
+    const err = new Error('Kode OTP sudah kedaluwarsa. Silakan daftar ulang.');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  // Update user: set verified, clear token
+  await pool.query(
+    'UPDATE users SET is_verified = TRUE, verification_token = NULL, token_expires_at = NULL WHERE id = ?',
+    [user.id]
+  );
+
+  return { message: 'Email berhasil diverifikasi! Akun Anda sekarang aktif.' };
+};
+
+/**
+ * Resend OTP verification code.
+ */
+const resendOTP = async ({ email }) => {
+  const [users] = await pool.query(
+    'SELECT id, is_verified FROM users WHERE email = ?',
+    [email]
+  );
+
+  if (users.length === 0) {
+    const err = new Error('Email tidak ditemukan.');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  const user = users[0];
+
+  if (user.is_verified) {
+    const err = new Error('Akun ini sudah terverifikasi.');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const otpCode = generateOTP();
+  const otpExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+  await pool.query(
+    'UPDATE users SET verification_token = ?, token_expires_at = ? WHERE id = ?',
+    [otpCode, otpExpiry, user.id]
+  );
+
+  await sendVerificationEmail(email, otpCode);
+
+  return { message: 'Kode OTP baru telah dikirim ke email Anda.' };
+};
+
+/**
  * Login: validate credentials, return user info + roles.
+ * Blocks login if email is not verified.
  */
 const login = async ({ username, password }) => {
   const [users] = await pool.query(
@@ -90,6 +200,14 @@ const login = async ({ username, password }) => {
   }
 
   const user = users[0];
+
+  // Block unverified users from logging in
+  if (!user.is_verified) {
+    const err = new Error('Email belum diverifikasi. Silakan cek inbox email Anda untuk kode OTP.');
+    err.statusCode = 403;
+    throw err;
+  }
+
   const isMatch = await bcrypt.compare(password, user.password_hash);
   if (!isMatch) {
     const err = new Error('Invalid username or password.');
@@ -188,4 +306,4 @@ const getProfile = async (userId) => {
   return user;
 };
 
-module.exports = { register, login, selectRole, getProfile };
+module.exports = { register, verifyEmail, resendOTP, login, selectRole, getProfile };

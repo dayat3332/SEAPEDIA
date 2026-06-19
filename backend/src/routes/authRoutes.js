@@ -2,11 +2,13 @@ const router = require('express').Router();
 const { body } = require('express-validator');
 const { validate } = require('../middleware/validate');
 const { auth } = require('../middleware/auth');
+const { registerLimiter } = require('../middleware/rateLimiter');
 const authController = require('../controllers/authController');
 
-// POST /api/auth/register
+// POST /api/auth/register (Rate Limited: 5 req/hour per IP)
 router.post(
   '/register',
+  registerLimiter,
   [
     body('username').trim().isLength({ min: 3, max: 50 }).withMessage('Username must be 3-50 characters.'),
     body('email').trim().isEmail().withMessage('Valid email is required.'),
@@ -27,6 +29,31 @@ router.post(
     validate,
   ],
   authController.register
+);
+
+// POST /api/auth/verify-email
+router.post(
+  '/verify-email',
+  [
+    body('email').trim().isEmail().withMessage('Valid email is required.'),
+    body('otpCode')
+      .trim()
+      .isLength({ min: 6, max: 6 })
+      .isNumeric()
+      .withMessage('OTP code must be a 6-digit number.'),
+    validate,
+  ],
+  authController.verifyEmail
+);
+
+// POST /api/auth/resend-otp
+router.post(
+  '/resend-otp',
+  [
+    body('email').trim().isEmail().withMessage('Valid email is required.'),
+    validate,
+  ],
+  authController.resendOTP
 );
 
 // POST /api/auth/login

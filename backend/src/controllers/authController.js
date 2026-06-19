@@ -4,7 +4,30 @@ const register = async (req, res, next) => {
   try {
     const { username, email, phone, password, fullName, roles } = req.body;
     const user = await authService.register({ username, email, phone, password, fullName, roles });
-    res.status(201).json({ message: 'Registration successful.', data: user });
+    res.status(201).json({
+      message: 'Pendaftaran berhasil. Silakan cek email Anda untuk kode verifikasi OTP.',
+      data: user,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const verifyEmail = async (req, res, next) => {
+  try {
+    const { email, otpCode } = req.body;
+    const result = await authService.verifyEmail({ email, otpCode });
+    res.json({ message: result.message });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const resendOTP = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    const result = await authService.resendOTP({ email });
+    res.json({ message: result.message });
   } catch (err) {
     next(err);
   }
@@ -39,4 +62,4 @@ const getProfile = async (req, res, next) => {
   }
 };
 
-module.exports = { register, login, selectRole, getProfile };
+module.exports = { register, verifyEmail, resendOTP, login, selectRole, getProfile };
