@@ -21,7 +21,7 @@ router.post(
   [
     body('storeName').trim().isLength({ min: 3, max: 100 }).withMessage('Store name must be 3-100 characters.'),
     body('description').trim().isLength({ max: 1000 }).withMessage('Description cannot exceed 1000 characters.'),
-    body('imageUrl').optional({ checkFalsy: true }).isURL().withMessage('Valid image URL is required.'),
+    body('imageUrl').optional({ checkFalsy: true }).isString().withMessage('Valid image URL or path is required.'),
     validate,
   ],
   storeController.createStore
@@ -32,7 +32,7 @@ router.put(
   [
     body('storeName').trim().isLength({ min: 3, max: 100 }).withMessage('Store name must be 3-100 characters.'),
     body('description').trim().isLength({ max: 1000 }).withMessage('Description cannot exceed 1000 characters.'),
-    body('imageUrl').optional({ checkFalsy: true }).isURL().withMessage('Valid image URL is required.'),
+    body('imageUrl').optional({ checkFalsy: true }).isString().withMessage('Valid image URL or path is required.'),
     validate,
   ],
   storeController.updateStore
