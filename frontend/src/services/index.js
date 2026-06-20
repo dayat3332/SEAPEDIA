@@ -5,6 +5,8 @@ export const authService = {
   login: (data) => api.post('/auth/login', data),
   selectRole: (role) => api.post('/auth/select-role', { role }),
   getProfile: () => api.get('/auth/profile'),
+  verifyOtp: (email, otpCode) => api.post('/auth/verify-otp', { email, otpCode }),
+  resendOtp: (email) => api.post('/auth/resend-otp', { email }),
 };
 
 export const productService = {

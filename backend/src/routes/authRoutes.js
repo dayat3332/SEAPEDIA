@@ -99,3 +99,4 @@ router.post(
 router.get('/profile', auth, authController.getProfile);
 
 module.exports = router;
+

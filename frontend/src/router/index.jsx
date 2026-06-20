@@ -6,6 +6,7 @@ import ProductListPage from '../pages/public/ProductListPage';
 import ProductDetailPage from '../pages/public/ProductDetailPage';
 import LoginPage from '../pages/public/LoginPage';
 import RegisterPage from '../pages/public/RegisterPage';
+import VerifyOtpPage from '../pages/public/VerifyOtpPage';
 import RoleSelectPage from '../pages/RoleSelectPage';
 import SellerDashboard from '../pages/seller/SellerDashboard';
 import BuyerDashboard from '../pages/buyer/BuyerDashboard';
@@ -91,6 +92,14 @@ export const router = createBrowserRouter([
         element: (
           <GuestRoute>
             <RegisterPage />
+          </GuestRoute>
+        ),
+      },
+      {
+        path: 'verify-otp',
+        element: (
+          <GuestRoute>
+            <VerifyOtpPage />
           </GuestRoute>
         ),
       },

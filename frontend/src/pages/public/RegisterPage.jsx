@@ -50,8 +50,8 @@ export default function RegisterPage() {
         fullName: form.fullName,
         roles: form.roles,
       });
-      toast.success('Registration successful! Please sign in.');
-      navigate('/login');
+      toast.success('Registration successful! Verification code (OTP) sent to your email.');
+      navigate('/verify-otp', { state: { email: form.email, username: form.username } });
     } catch (err) {
       toast.error(err.response?.data?.message || 'Registration failed.');
     } finally {

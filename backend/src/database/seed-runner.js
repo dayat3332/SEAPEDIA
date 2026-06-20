@@ -55,18 +55,20 @@ const promos = [
   { code: 'PROMO10PCT', discountType: 'percentage', discountValue: 10, minPurchase: 30000, maxDiscount: 15000, validFrom: '2026-01-01 00:00:00', validUntil: '2027-12-31 23:59:59' },
 ];
 
+
 async function seed() {
   const conn = await pool.getConnection();
   try {
-    console.log('🌱 Starting seed...');
-    await conn.beginTransaction();
-
-    // Check if data already exists
-    const [[{ count }]] = await conn.query('SELECT COUNT(*) as count FROM users');
-    if (count > 0) {
-      console.log('⚠️  Database already has data. Skipping seed.');
+    console.log('🌱 Checking seed data...');
+    // Check if admin1 user already exists
+    const [adminRows] = await conn.query("SELECT id FROM users WHERE username = 'admin1'");
+    if (adminRows.length > 0) {
+      console.log('⚠️  Demo user admin1 already exists. Skipping seed.');
       return;
     }
+
+    console.log('🌱 Seeding demo accounts...');
+    await conn.beginTransaction();
 
     const hash = await bcrypt.hash(DEMO_PASSWORD, 10);
 
@@ -125,7 +127,7 @@ async function seed() {
     // Insert vouchers
     for (const v of vouchers) {
       await conn.query(
-        `INSERT INTO vouchers (code, discount_type, discount_value, min_purchase, max_discount, max_usage, valid_from, valid_until)
+        `INSERT IGNORE INTO vouchers (code, discount_type, discount_value, min_purchase, max_discount, max_usage, valid_from, valid_until)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
         [v.code, v.discountType, v.discountValue, v.minPurchase, v.maxDiscount, v.maxUsage, v.validFrom, v.validUntil]
       );
@@ -135,7 +137,7 @@ async function seed() {
     // Insert promos
     for (const p of promos) {
       await conn.query(
-        `INSERT INTO promos (code, discount_type, discount_value, min_purchase, max_discount, valid_from, valid_until)
+        `INSERT IGNORE INTO promos (code, discount_type, discount_value, min_purchase, max_discount, valid_from, valid_until)
          VALUES (?, ?, ?, ?, ?, ?, ?)`,
         [p.code, p.discountType, p.discountValue, p.minPurchase, p.maxDiscount, p.validFrom, p.validUntil]
       );
@@ -152,19 +154,20 @@ async function seed() {
     console.log('   buyer2    → Buyer (Rp 1.000.000)');
     console.log('   driver1   → Driver');
     console.log('   multirole → Seller + Buyer + Driver');
-    console.log('\n📋 Seeded Discount Codes:');
-    console.log('   VOUCHER10K   → Fixed Rp 10.000 discount (min purchase Rp 50.000)');
-    console.log('   VOUCHER50PCT → 50% discount capped at Rp 50.000 (min purchase Rp 100.000)');
-    console.log('   PROMO20K     → Fixed Rp 20.000 discount (min purchase Rp 80.000)');
-    console.log('   PROMO10PCT   → 10% discount capped at Rp 15.000 (min purchase Rp 30.000)');
   } catch (err) {
     await conn.rollback();
     console.error('❌ Seed failed:', err.message);
     throw err;
   } finally {
     conn.release();
-    process.exit(0);
+    if (require.main === module) {
+      process.exit(0);
+    }
   }
 }
 
-seed();
+module.exports = seed;
+
+if (require.main === module) {
+  seed();
+}

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { HiOutlineUser, HiOutlineLockClosed, HiOutlineShoppingBag } from 'react-icons/hi2';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button, Input } from '../../components/ui';
@@ -7,8 +7,9 @@ import toast from 'react-hot-toast';
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
-  const [form, setForm] = useState({ username: '', password: '' });
+  const [form, setForm] = useState({ username: location.state?.username || '', password: '' });
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -28,7 +29,14 @@ export default function LoginPage() {
         navigate('/select-role');
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Login failed. Please check your credentials.');
+      const isUnverified = err.response?.status === 403;
+      const email = err.response?.data?.email;
+      const message = err.response?.data?.message || 'Login failed. Please check your credentials.';
+
+      toast.error(message);
+      if (isUnverified && email) {
+        navigate('/verify-otp', { state: { email, username: form.username } });
+      }
     } finally {
       setLoading(false);
     }

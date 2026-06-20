@@ -205,6 +205,7 @@ const login = async ({ username, password }) => {
   if (!user.is_verified) {
     const err = new Error('Email belum diverifikasi. Silakan cek inbox email Anda untuk kode OTP.');
     err.statusCode = 403;
+    err.email = user.email;
     throw err;
   }
 

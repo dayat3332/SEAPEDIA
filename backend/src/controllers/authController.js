@@ -63,3 +63,4 @@ const getProfile = async (req, res, next) => {
 };
 
 module.exports = { register, verifyEmail, resendOTP, login, selectRole, getProfile };
+

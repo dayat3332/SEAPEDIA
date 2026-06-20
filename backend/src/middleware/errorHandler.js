@@ -16,8 +16,13 @@ const errorHandler = (err, req, res, _next) => {
 
   const statusCode = err.statusCode || 500;
   const message = err.statusCode ? err.message : 'Internal server error.';
+  
+  const response = { message };
+  if (err.email) {
+    response.email = err.email;
+  }
 
-  res.status(statusCode).json({ message });
+  res.status(statusCode).json(response);
 };
 
 module.exports = { errorHandler };

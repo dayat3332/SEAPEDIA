@@ -43,6 +43,16 @@ export function AuthProvider({ children }) {
     return res.data.data;
   }, []);
 
+  const verifyOtp = useCallback(async (email, otpCode) => {
+    const res = await authService.verifyOtp(email, otpCode);
+    return res.data.data;
+  }, []);
+
+  const resendOtp = useCallback(async (email) => {
+    const res = await authService.resendOtp(email);
+    return res.data.data;
+  }, []);
+
   const selectRole = useCallback(async (role) => {
     const res = await authService.selectRole(role);
     const { user: userData, token: newToken, activeRole: newRole } = res.data.data;
@@ -76,6 +86,8 @@ export function AuthProvider({ children }) {
     hasRole: (role) => user?.roles?.includes(role) || false,
     login,
     register,
+    verifyOtp,
+    resendOtp,
     selectRole,
     logout,
   };
