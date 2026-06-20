@@ -4,15 +4,14 @@ const { validate } = require('../middleware/validate');
 const { auth } = require('../middleware/auth');
 const { roleGuard } = require('../middleware/roleGuard');
 const storeController = require('../controllers/storeController');
+const storeReviewController = require('../controllers/storeReviewController');
 
-// Protected route to get current seller's store (Seller only)
-// Place this before /:id so it doesn't get captured by the parameterized route.
 router.get('/my', auth, roleGuard(['seller']), storeController.getMyStore);
 
-// Public route to get store summary by ID
+router.get('/:id/reviews', storeReviewController.getStoreReviews);
+
 router.get('/:id', storeController.getStoreSummary);
 
-// Protected routes (Seller only)
 router.use(auth);
 router.use(roleGuard(['seller']));
 

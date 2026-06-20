@@ -5,7 +5,16 @@ const pool = require('../config/database');
  */
 const getStoreByUserId = async (userId) => {
   const [stores] = await pool.query(
-    'SELECT * FROM stores WHERE user_id = ?',
+    `SELECT s.*, 
+            COALESCE(avg_rev.avg_rating, 0) as average_rating,
+            COALESCE(avg_rev.total_reviews, 0) as total_reviews
+     FROM stores s
+     LEFT JOIN (
+       SELECT store_id, AVG(rating) as avg_rating, COUNT(id) as total_reviews
+       FROM store_reviews
+       GROUP BY store_id
+     ) avg_rev ON s.id = avg_rev.store_id
+     WHERE s.user_id = ?`,
     [userId]
   );
   return stores[0] || null;
@@ -16,7 +25,17 @@ const getStoreByUserId = async (userId) => {
  */
 const getStoreById = async (id) => {
   const [stores] = await pool.query(
-    'SELECT s.*, u.full_name as owner_name FROM stores s JOIN users u ON s.user_id = u.id WHERE s.id = ?',
+    `SELECT s.*, u.full_name as owner_name,
+            COALESCE(avg_rev.avg_rating, 0) as average_rating,
+            COALESCE(avg_rev.total_reviews, 0) as total_reviews
+     FROM stores s 
+     JOIN users u ON s.user_id = u.id 
+     LEFT JOIN (
+       SELECT store_id, AVG(rating) as avg_rating, COUNT(id) as total_reviews
+       FROM store_reviews
+       GROUP BY store_id
+     ) avg_rev ON s.id = avg_rev.store_id
+     WHERE s.id = ?`,
     [id]
   );
   return stores[0] || null;
@@ -40,7 +59,7 @@ const isStoreNameUnique = async (storeName, excludeStoreId = null) => {
  * Create a new store for a seller.
  */
 const createStore = async ({ userId, storeName, description, imageUrl = null }) => {
-  // Check if seller already has a store
+
   const existingStore = await getStoreByUserId(userId);
   if (existingStore) {
     const err = new Error('You already own a store.');
@@ -48,7 +67,6 @@ const createStore = async ({ userId, storeName, description, imageUrl = null }) 
     throw err;
   }
 
-  // Check unique store name
   const isUnique = await isStoreNameUnique(storeName);
   if (!isUnique) {
     const err = new Error('Store name is already taken.');
@@ -75,7 +93,6 @@ const updateStore = async (userId, { storeName, description, imageUrl = null }) 
     throw err;
   }
 
-  // Check unique store name excluding current store
   const isUnique = await isStoreNameUnique(storeName, store.id);
   if (!isUnique) {
     const err = new Error('Store name is already taken.');

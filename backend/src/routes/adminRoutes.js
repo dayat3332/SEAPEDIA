@@ -12,4 +12,8 @@ router.get('/logs', adminController.getSystemLogs);
 router.post('/simulate-next-day', adminController.simulateNextDay);
 router.delete('/users/:id', adminController.deleteUser);
 
+const storeReviewController = require('../controllers/storeReviewController');
+router.get('/store-reviews', storeReviewController.getAllStoreReviews);
+router.delete('/store-reviews/:id', storeReviewController.deleteStoreReview);
+
 module.exports = router;

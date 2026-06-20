@@ -24,7 +24,6 @@ const checkout = async (userId, { addressId, deliveryMethod, discountCode }) => 
   try {
     await conn.beginTransaction();
 
-    // 1. Get buyer's cart and cart items
     const [carts] = await conn.query('SELECT * FROM carts WHERE user_id = ?', [userId]);
     if (carts.length === 0) {
       const err = new Error('Cart not found.');
@@ -49,7 +48,6 @@ const checkout = async (userId, { addressId, deliveryMethod, discountCode }) => 
 
     const storeId = cart.store_id;
 
-    // 2. Validate address and snapshot it
     const [addresses] = await conn.query(
       'SELECT * FROM delivery_addresses WHERE id = ? AND user_id = ?',
       [addressId, userId]
@@ -62,7 +60,6 @@ const checkout = async (userId, { addressId, deliveryMethod, discountCode }) => 
     const address = addresses[0];
     const addressSnapshot = `${address.recipient_name} | ${address.phone} | ${address.label}: ${address.full_address}`;
 
-    // 3. Calculate financial details
     let subtotal = 0;
     for (const item of cartItems) {
       if (!item.is_active) {
@@ -73,7 +70,6 @@ const checkout = async (userId, { addressId, deliveryMethod, discountCode }) => 
       subtotal += parseFloat(item.price) * item.quantity;
     }
 
-    // Delivery Fee calculation
     let deliveryFee = 0;
     if (deliveryMethod === 'instant') {
       deliveryFee = 25000.00;
@@ -83,13 +79,12 @@ const checkout = async (userId, { addressId, deliveryMethod, discountCode }) => 
       deliveryFee = 10000.00;
     }
 
-    // Discount code validation and calculation
     let discountAmount = 0.00;
     let voucherId = null;
     let promoId = null;
 
     if (discountCode) {
-      // Check vouchers first
+
       const [vouchers] = await conn.query('SELECT * FROM vouchers WHERE code = ? FOR UPDATE', [discountCode]);
       if (vouchers.length > 0) {
         const v = vouchers[0];
@@ -115,7 +110,6 @@ const checkout = async (userId, { addressId, deliveryMethod, discountCode }) => 
           throw err;
         }
 
-        // Calculate discount
         if (v.discount_type === 'fixed') {
           discountAmount = parseFloat(v.discount_value);
         } else {
@@ -127,11 +121,10 @@ const checkout = async (userId, { addressId, deliveryMethod, discountCode }) => 
         discountAmount = Math.min(discountAmount, subtotal);
         voucherId = v.id;
 
-        // Increment usage count
         await conn.query('UPDATE vouchers SET used_count = used_count + 1 WHERE id = ?', [v.id]);
 
       } else {
-        // Check promos
+
         const [promos] = await conn.query('SELECT * FROM promos WHERE code = ? FOR UPDATE', [discountCode]);
         if (promos.length > 0) {
           const p = promos[0];
@@ -152,7 +145,6 @@ const checkout = async (userId, { addressId, deliveryMethod, discountCode }) => 
             throw err;
           }
 
-          // Calculate discount
           if (p.discount_type === 'fixed') {
             discountAmount = parseFloat(p.discount_value);
           } else {
@@ -171,19 +163,17 @@ const checkout = async (userId, { addressId, deliveryMethod, discountCode }) => 
       }
     }
 
-    // PPN Tax calculation (12%)
     const taxableAmount = subtotal - discountAmount;
     const taxAmount = parseFloat((taxableAmount * 0.12).toFixed(2));
     const total = subtotal - discountAmount + deliveryFee + taxAmount;
 
-    // 4. Verify wallet balance (lock wallet row)
     const [wallets] = await conn.query(
       'SELECT id, balance FROM wallets WHERE user_id = ? FOR UPDATE',
       [userId]
     );
     let wallet;
     if (wallets.length === 0) {
-      // Auto-create wallet for buyer if not existing
+
       const [createResult] = await conn.query(
         'INSERT INTO wallets (user_id, balance) VALUES (?, 0)',
         [userId]
@@ -198,7 +188,6 @@ const checkout = async (userId, { addressId, deliveryMethod, discountCode }) => 
       throw err;
     }
 
-    // 5. Verify product stocks (lock product rows)
     for (const item of cartItems) {
       const [prods] = await conn.query(
         'SELECT id, stock, name FROM products WHERE id = ? FOR UPDATE',
@@ -212,7 +201,6 @@ const checkout = async (userId, { addressId, deliveryMethod, discountCode }) => 
       }
     }
 
-    // 6. Deduct product stocks
     for (const item of cartItems) {
       await conn.query(
         'UPDATE products SET stock = stock - ? WHERE id = ?',
@@ -220,7 +208,6 @@ const checkout = async (userId, { addressId, deliveryMethod, discountCode }) => 
       );
     }
 
-    // 7. Deduct wallet balance and insert transaction
     const newBalance = parseFloat(wallet.balance) - total;
     await conn.query('UPDATE wallets SET balance = ? WHERE id = ?', [newBalance, wallet.id]);
 
@@ -231,7 +218,6 @@ const checkout = async (userId, { addressId, deliveryMethod, discountCode }) => 
     );
     const txId = txResult.insertId;
 
-    // 8. Create Order
     const orderNumber = generateOrderNumber();
     const [orderResult] = await conn.query(
       `INSERT INTO orders (order_number, buyer_id, store_id, address_id, delivery_address_snapshot, 
@@ -241,13 +227,11 @@ const checkout = async (userId, { addressId, deliveryMethod, discountCode }) => 
     );
     const orderId = orderResult.insertId;
 
-    // 9. Update transaction reference_id to point to the order
     await conn.query(
       'UPDATE wallet_transactions SET reference_id = ? WHERE id = ?',
       [orderId, txId]
     );
 
-    // 10. Insert order items
     for (const item of cartItems) {
       const itemSubtotal = parseFloat(item.price) * item.quantity;
       await conn.query(
@@ -257,14 +241,12 @@ const checkout = async (userId, { addressId, deliveryMethod, discountCode }) => 
       );
     }
 
-    // 11. Insert status history
     await conn.query(
       `INSERT INTO order_status_history (order_id, status, note)
        VALUES (?, 'sedang_dikemas', 'Order placed successfully. Payment completed using buyer wallet.')`,
       [orderId]
     );
 
-    // 12. Empty cart items and reset store_id
     await conn.query('DELETE FROM cart_items WHERE cart_id = ?', [cart.id]);
     await conn.query('UPDATE carts SET store_id = NULL WHERE id = ?', [cart.id]);
 
@@ -289,9 +271,11 @@ const checkout = async (userId, { addressId, deliveryMethod, discountCode }) => 
  */
 const getOrdersForBuyer = async (userId) => {
   const [orders] = await pool.query(
-    `SELECT o.*, s.store_name 
+    `SELECT o.*, s.store_name,
+            (CASE WHEN sr.id IS NOT NULL THEN TRUE ELSE FALSE END) as is_reviewed
      FROM orders o
      JOIN stores s ON o.store_id = s.id
+     LEFT JOIN store_reviews sr ON o.id = sr.order_id
      WHERE o.buyer_id = ?
      ORDER BY o.created_at DESC`,
     [userId]
@@ -303,7 +287,7 @@ const getOrdersForBuyer = async (userId) => {
  * List incoming orders for a seller store.
  */
 const getOrdersForSeller = async (userId) => {
-  // Find seller store first
+
   const [stores] = await pool.query('SELECT id FROM stores WHERE user_id = ?', [userId]);
   if (stores.length === 0) {
     return [];
@@ -326,10 +310,12 @@ const getOrdersForSeller = async (userId) => {
  */
 const getOrderById = async (orderId, userId, activeRole) => {
   const [orders] = await pool.query(
-    `SELECT o.*, s.store_name, u.full_name as buyer_name 
+    `SELECT o.*, s.store_name, u.full_name as buyer_name,
+            (CASE WHEN sr.id IS NOT NULL THEN TRUE ELSE FALSE END) as is_reviewed
      FROM orders o
      JOIN stores s ON o.store_id = s.id
      JOIN users u ON o.buyer_id = u.id
+     LEFT JOIN store_reviews sr ON o.id = sr.order_id
      WHERE o.id = ?`,
     [orderId]
   );
@@ -342,7 +328,6 @@ const getOrderById = async (orderId, userId, activeRole) => {
 
   const order = orders[0];
 
-  // Verify access authorization based on active role
   if (activeRole === 'buyer' && order.buyer_id !== userId) {
     const err = new Error('Access denied. You do not own this order.');
     err.statusCode = 403;
@@ -359,7 +344,7 @@ const getOrderById = async (orderId, userId, activeRole) => {
   }
 
   if (activeRole === 'driver') {
-    // We will check driver job constraints in Level 5, but for now check if driver job is available or assigned
+
     const [jobs] = await pool.query('SELECT driver_id FROM delivery_jobs WHERE order_id = ?', [orderId]);
     if (jobs.length > 0 && jobs[0].driver_id !== null && jobs[0].driver_id !== userId) {
       const err = new Error('Access denied. This job is taken by another driver.');
@@ -368,7 +353,6 @@ const getOrderById = async (orderId, userId, activeRole) => {
     }
   }
 
-  // Get order items
   const [items] = await pool.query(
     `SELECT oi.*, p.image_url 
      FROM order_items oi
@@ -377,7 +361,6 @@ const getOrderById = async (orderId, userId, activeRole) => {
     [orderId]
   );
 
-  // Get status history
   const [history] = await pool.query(
     'SELECT * FROM order_status_history WHERE order_id = ? ORDER BY created_at ASC',
     [orderId]
@@ -397,7 +380,6 @@ const updateOrderStatus = async (orderId, userId, activeRole, { status, note }) 
   try {
     await conn.beginTransaction();
 
-    // 1. Get order detail (locked)
     const [orders] = await conn.query('SELECT * FROM orders WHERE id = ? FOR UPDATE', [orderId]);
     if (orders.length === 0) {
       const err = new Error('Order not found.');
@@ -406,9 +388,8 @@ const updateOrderStatus = async (orderId, userId, activeRole, { status, note }) 
     }
     const order = orders[0];
 
-    // 2. Validate state transitions based on active role
     if (activeRole === 'seller') {
-      // Find seller store
+
       const [stores] = await conn.query('SELECT id FROM stores WHERE user_id = ?', [userId]);
       if (stores.length === 0 || stores[0].id !== order.store_id) {
         const err = new Error('Access denied. This order belongs to another store.');
@@ -422,20 +403,18 @@ const updateOrderStatus = async (orderId, userId, activeRole, { status, note }) 
         throw err;
       }
     } else if (activeRole === 'driver') {
-      // Driver transitions will be added in Level 5
+
     } else if (activeRole !== 'admin') {
       const err = new Error('Access denied.');
       err.statusCode = 403;
       throw err;
     }
 
-    // 3. Update status
     await conn.query(
       'UPDATE orders SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
       [status, orderId]
     );
 
-    // If status transitions to 'menunggu_pengirim', create/reset delivery job for drivers
     if (status === 'menunggu_pengirim') {
       await conn.query(
         'INSERT INTO delivery_jobs (order_id, status) VALUES (?, \'available\') ON DUPLICATE KEY UPDATE status = \'available\', driver_id = NULL',
@@ -443,7 +422,6 @@ const updateOrderStatus = async (orderId, userId, activeRole, { status, note }) 
       );
     }
 
-    // 4. Record history
     await conn.query(
       'INSERT INTO order_status_history (order_id, status, note) VALUES (?, ?, ?)',
       [orderId, status, note || `Status updated to ${status}`]

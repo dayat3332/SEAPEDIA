@@ -8,6 +8,7 @@ const env = {
   DB_NAME: process.env.DB_NAME || 'seapedia',
   DB_USER: process.env.DB_USER || 'seapedia_user',
   DB_PASSWORD: process.env.DB_PASSWORD || 'seapedia_pass_2026',
+  DB_SSL: process.env.DB_SSL === 'true',
   JWT_SECRET: process.env.JWT_SECRET || 'seapedia-dev-secret-key-change-in-prod',
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '24h',
   CORS_ORIGIN: process.env.CORS_ORIGIN || 'http://localhost:5173',

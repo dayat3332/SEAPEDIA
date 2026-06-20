@@ -50,9 +50,16 @@ const getProducts = async ({ page = 1, limit = 12, search = '', storeId = null }
  */
 const getProductById = async (id) => {
   const [products] = await pool.query(
-    `SELECT p.*, s.id as store_id, s.store_name, s.description as store_description, s.image_url as store_image_url
+    `SELECT p.*, s.id as store_id, s.store_name, s.description as store_description, s.image_url as store_image_url,
+            COALESCE(avg_rev.avg_rating, 0) as store_average_rating,
+            COALESCE(avg_rev.total_reviews, 0) as store_total_reviews
      FROM products p
      JOIN stores s ON p.store_id = s.id
+     LEFT JOIN (
+       SELECT store_id, AVG(rating) as avg_rating, COUNT(id) as total_reviews
+       FROM store_reviews
+       GROUP BY store_id
+     ) avg_rev ON s.id = avg_rev.store_id
      WHERE p.id = ? AND p.is_active = TRUE`,
     [id]
   );
