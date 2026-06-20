@@ -16,10 +16,13 @@ import CartPage from '../pages/buyer/CartPage';
 import CheckoutPage from '../pages/buyer/CheckoutPage';
 import { ProtectedRoute, GuestRoute, RoleSelectRoute } from './guards';
 
+import ScrollToTop from '../components/layout/ScrollToTop';
+
 // Layout wrapper for public pages (with Navbar and Footer)
 function PublicLayout() {
   return (
     <div className="flex flex-col min-h-screen bg-surface-50">
+      <ScrollToTop />
       <Navbar />
       <main className="flex-grow">
         <Outlet />
@@ -33,6 +36,7 @@ function PublicLayout() {
 function AuthLayout() {
   return (
     <div className="min-h-screen auth-bg relative flex items-center justify-center">
+      <ScrollToTop />
       <main className="relative z-10 w-full">
         <Outlet />
       </main>
@@ -46,6 +50,7 @@ import DashboardHeader from '../components/layout/DashboardHeader';
 function DashboardLayout() {
   return (
     <div className="dashboard-shell bg-grid-pattern min-h-screen flex flex-col">
+      <ScrollToTop />
       <DashboardHeader />
       <main className="flex-grow">
         <Outlet />
