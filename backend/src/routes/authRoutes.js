@@ -4,6 +4,32 @@ const { validate } = require('../middleware/validate');
 const { auth } = require('../middleware/auth');
 const { registerLimiter } = require('../middleware/rateLimiter');
 const authController = require('../controllers/authController');
+const pool = require('../config/database');
+
+router.get('/debug-db', async (req, res) => {
+  try {
+    const conn = await pool.getConnection();
+    try {
+      const [tables] = await conn.query('SHOW TABLES');
+      const [usersColumns] = await conn.query('DESCRIBE users');
+      const [users] = await conn.query('SELECT id, username, email, is_verified, verification_otp FROM users LIMIT 20');
+      res.json({
+        success: true,
+        tables,
+        usersColumns,
+        users,
+      });
+    } finally {
+      conn.release();
+    }
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      error: err.message,
+      stack: err.stack,
+    });
+  }
+});
 
 // POST /api/auth/register (Rate Limited: 3 req/hour per IP)
 router.post(
