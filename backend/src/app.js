@@ -69,6 +69,49 @@ if (env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
+// Debug endpoint
+app.get('/api/debug-db', async (req, res) => {
+  try {
+    const pool = require('./config/database');
+    const fs = require('fs');
+    const path = require('path');
+    
+    const results = {};
+    
+    // Check schema file existence
+    const schemaPath = path.join(__dirname, './database/schema.sql');
+    results.schemaFileExists = fs.existsSync(schemaPath);
+    results.schemaPathResolved = schemaPath;
+    if (results.schemaFileExists) {
+      results.schemaFileSize = fs.statSync(schemaPath).size;
+    }
+    
+    // Query tables
+    const [tablesResult] = await pool.query('SHOW TABLES');
+    if (tablesResult.length > 0) {
+      const dbNameKey = Object.keys(tablesResult[0])[0];
+      const allTables = tablesResult.map(row => row[dbNameKey]);
+      results.tables = {};
+      
+      for (const table of allTables) {
+        const [cols] = await pool.query(`SHOW COLUMNS FROM ${table}`);
+        results.tables[table] = cols.map(c => ({
+          field: c.Field,
+          type: c.Type,
+          key: c.Key,
+          extra: c.Extra
+        }));
+      }
+    } else {
+      results.tables = [];
+    }
+    
+    res.json(results);
+  } catch (err) {
+    res.status(500).json({ error: err.message, stack: err.stack });
+  }
+});
+
 // API routes
 app.use('/api', routes);
 
