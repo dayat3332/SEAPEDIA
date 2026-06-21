@@ -22,32 +22,29 @@ import toast from 'react-hot-toast';
 
 export default function AdminDashboard() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('metrics'); // metrics, vouchers, promos, users, reviews
+  const [activeTab, setActiveTab] = useState('metrics');
   const [loading, setLoading] = useState(true);
 
-  // Statistics & Logs
   const [metrics, setMetrics] = useState({ userCount: 0, storeCount: 0, productCount: 0, orderCount: 0, totalSales: 0 });
   const [systemLogs, setSystemLogs] = useState([]);
   const [usersList, setUsersList] = useState([]);
   const [reviewsList, setReviewsList] = useState([]);
+  const [storeReviewsList, setStoreReviewsList] = useState([]);
+  const [reviewSubTab, setReviewSubTab] = useState('app');
 
-  // Disconts Data
   const [vouchers, setVouchers] = useState([]);
   const [promos, setPromos] = useState([]);
 
-  // Modals & Forms
   const [discountDetail, setDiscountDetail] = useState(null);
-  const [discountTypeDetail, setDiscountTypeDetail] = useState('voucher'); // voucher or promo
+  const [discountTypeDetail, setDiscountTypeDetail] = useState('voucher');
   const [detailOpen, setDetailOpen] = useState(false);
 
-  // Create Form State
   const [createOpen, setCreateOpen] = useState(false);
-  const [formType, setFormType] = useState('voucher'); // voucher or promo
+  const [formType, setFormType] = useState('voucher');
   const [submittingForm, setSubmittingForm] = useState(false);
 
-  // Input States
   const [code, setCode] = useState('');
-  const [discountType, setDiscountType] = useState('fixed'); // fixed, percentage
+  const [discountType, setDiscountType] = useState('fixed');
   const [discountValue, setDiscountValue] = useState('');
   const [minPurchase, setMinPurchase] = useState('');
   const [maxDiscount, setMaxDiscount] = useState('');
@@ -55,13 +52,11 @@ export default function AdminDashboard() {
   const [validFrom, setValidFrom] = useState('');
   const [validUntil, setValidUntil] = useState('');
 
-  // Time Simulation States
   const [simulationDays, setSimulationDays] = useState('1');
   const [simulating, setSimulating] = useState(false);
 
-  // Confirm Delete States
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [deleteType, setDeleteType] = useState('user'); // user or review
+  const [deleteType, setDeleteType] = useState('user');
   const [pendingDeleteId, setPendingDeleteId] = useState(null);
 
   const handleSimulateTime = async () => {
@@ -113,8 +108,12 @@ export default function AdminDashboard() {
         const res = await adminService.getUsers();
         setUsersList(res.data.data);
       } else if (activeTab === 'reviews') {
-        const res = await reviewService.getReviews({ limit: 100 });
-        setReviewsList(res.data.data.reviews);
+        const [appRes, storeRes] = await Promise.all([
+          reviewService.getReviews({ limit: 100 }),
+          adminService.getStoreReviews({ limit: 100 })
+        ]);
+        setReviewsList(appRes.data.data.reviews || []);
+        setStoreReviewsList(storeRes.data.data.reviews || []);
       }
     } catch (err) {
       console.error(err);
@@ -151,6 +150,18 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleDeleteStoreReview = async (id) => {
+    try {
+      await adminService.deleteStoreReview(id);
+      toast.success('Store review deleted successfully.');
+      setStoreReviewsList((prev) => prev.filter((r) => r.id !== id));
+      setDeleteConfirmOpen(false);
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.message || 'Failed to delete store review.');
+    }
+  };
+
   const confirmDelete = (id, type) => {
     setPendingDeleteId(id);
     setDeleteType(type);
@@ -160,6 +171,8 @@ export default function AdminDashboard() {
   const executeDelete = () => {
     if (deleteType === 'user') {
       handleDeleteUser(pendingDeleteId);
+    } else if (deleteType === 'store_review') {
+      handleDeleteStoreReview(pendingDeleteId);
     } else {
       handleDeleteReview(pendingDeleteId);
     }
@@ -557,53 +570,134 @@ export default function AdminDashboard() {
           </Card>
         )}
 
-        {/* TAB 5: APPLICATION REVIEWS */}
+        {/* TAB 5: APPLICATION & STORE REVIEWS */}
         {activeTab === 'reviews' && (
           <Card className="p-6 animate-fade-in">
-            <h3 className="font-bold text-surface-900 text-lg mb-4">Application Reviews & Feedback</h3>
-            {reviewsList.length === 0 ? (
-              <div className="text-center py-12 text-surface-400">No reviews submitted yet.</div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-left text-sm">
-                  <thead className="bg-surface-50 border-b border-surface-200 text-surface-500 font-semibold uppercase tracking-wider text-xs">
-                    <tr>
-                      <th className="px-6 py-3.5">Reviewer</th>
-                      <th className="px-6 py-3.5">Rating</th>
-                      <th className="px-6 py-3.5">Comment</th>
-                      <th className="px-6 py-3.5">Date</th>
-                      <th className="px-6 py-3.5 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-surface-150 text-surface-700 bg-white">
-                    {reviewsList.map((rev) => (
-                      <tr key={rev.id} className="hover:bg-surface-50/50">
-                        <td className="px-6 py-4 font-bold text-surface-900 whitespace-nowrap">
-                          {rev.reviewer_name}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <RatingStars rating={rev.rating} size={14} />
-                        </td>
-                        <td className="px-6 py-4 max-w-md">
-                          <p className="text-surface-700 font-medium leading-relaxed whitespace-pre-wrap">{rev.comment}</p>
-                        </td>
-                        <td className="px-6 py-4 text-xs text-surface-400 whitespace-nowrap">
-                          {formatDate(rev.created_at)}
-                        </td>
-                        <td className="px-6 py-4 text-right whitespace-nowrap">
-                          <button
-                            onClick={() => confirmDelete(rev.id, 'review')}
-                            className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                            title="Delete Review"
-                          >
-                            <HiOutlineTrash size={18} />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+              <div>
+                <h3 className="font-bold text-surface-900 text-lg">Reviews & Feedback Moderation</h3>
+                <p className="text-xs text-surface-500">Moderate and manage platform feedback and store reviews.</p>
               </div>
+              
+              {/* Sub-tabs toggler */}
+              <div className="flex bg-surface-100 p-1 rounded-lg self-start sm:self-auto">
+                <button
+                  onClick={() => setReviewSubTab('app')}
+                  className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all cursor-pointer ${
+                    reviewSubTab === 'app'
+                      ? 'bg-white text-surface-900 shadow-sm'
+                      : 'text-surface-500 hover:text-surface-800'
+                  }`}
+                >
+                  App Feedback ({reviewsList.length})
+                </button>
+                <button
+                  onClick={() => setReviewSubTab('store')}
+                  className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all cursor-pointer ${
+                    reviewSubTab === 'store'
+                      ? 'bg-white text-surface-900 shadow-sm'
+                      : 'text-surface-500 hover:text-surface-800'
+                  }`}
+                >
+                  Store Reviews ({storeReviewsList.length})
+                </button>
+              </div>
+            </div>
+
+            {reviewSubTab === 'app' ? (
+              reviewsList.length === 0 ? (
+                <div className="text-center py-12 text-surface-400">No application reviews submitted yet.</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full text-left text-sm">
+                    <thead className="bg-surface-50 border-b border-surface-200 text-surface-500 font-semibold uppercase tracking-wider text-xs">
+                      <tr>
+                        <th className="px-6 py-3.5">Reviewer</th>
+                        <th className="px-6 py-3.5">Rating</th>
+                        <th className="px-6 py-3.5">Comment</th>
+                        <th className="px-6 py-3.5">Date</th>
+                        <th className="px-6 py-3.5 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-surface-150 text-surface-700 bg-white">
+                      {reviewsList.map((rev) => (
+                        <tr key={rev.id} className="hover:bg-surface-50/50">
+                          <td className="px-6 py-4 font-bold text-surface-900 whitespace-nowrap">
+                            {rev.reviewer_name}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <RatingStars rating={rev.rating} size={14} />
+                          </td>
+                          <td className="px-6 py-4 max-w-md">
+                            <p className="text-surface-700 font-medium leading-relaxed whitespace-pre-wrap">{rev.comment}</p>
+                          </td>
+                          <td className="px-6 py-4 text-xs text-surface-400 whitespace-nowrap">
+                            {formatDate(rev.created_at)}
+                          </td>
+                          <td className="px-6 py-4 text-right whitespace-nowrap">
+                            <button
+                              onClick={() => confirmDelete(rev.id, 'review')}
+                              className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                              title="Delete Review"
+                            >
+                              <HiOutlineTrash size={18} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )
+            ) : (
+              storeReviewsList.length === 0 ? (
+                <div className="text-center py-12 text-surface-400">No store reviews submitted yet.</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full text-left text-sm">
+                    <thead className="bg-surface-50 border-b border-surface-200 text-surface-500 font-semibold uppercase tracking-wider text-xs">
+                      <tr>
+                        <th className="px-6 py-3.5">Reviewer</th>
+                        <th className="px-6 py-3.5">Target Store</th>
+                        <th className="px-6 py-3.5">Rating</th>
+                        <th className="px-6 py-3.5">Comment</th>
+                        <th className="px-6 py-3.5">Date</th>
+                        <th className="px-6 py-3.5 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-surface-150 text-surface-700 bg-white">
+                      {storeReviewsList.map((rev) => (
+                        <tr key={rev.id} className="hover:bg-surface-50/50">
+                          <td className="px-6 py-4 font-bold text-surface-900 whitespace-nowrap">
+                            {rev.reviewer_name}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap font-medium text-surface-700">
+                            {rev.store_name}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <RatingStars rating={rev.rating} size={14} />
+                          </td>
+                          <td className="px-6 py-4 max-w-md">
+                            <p className="text-surface-700 font-medium leading-relaxed whitespace-pre-wrap">{rev.comment}</p>
+                          </td>
+                          <td className="px-6 py-4 text-xs text-surface-400 whitespace-nowrap">
+                            {formatDate(rev.created_at)}
+                          </td>
+                          <td className="px-6 py-4 text-right whitespace-nowrap">
+                            <button
+                              onClick={() => confirmDelete(rev.id, 'store_review')}
+                              className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                              title="Delete Store Review"
+                            >
+                              <HiOutlineTrash size={18} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )
             )}
           </Card>
         )}
@@ -786,6 +880,8 @@ export default function AdminDashboard() {
         <p className="text-sm text-surface-600 mb-6">
           {deleteType === 'user' 
             ? 'Are you sure you want to delete this user? This will cascade delete their store, products, wallet, and orders. This action cannot be undone.'
+            : deleteType === 'store_review'
+            ? 'Are you sure you want to permanently delete this store review? This action cannot be undone.'
             : 'Are you sure you want to permanently delete this application review? This action cannot be undone.'}
         </p>
         <div className="flex justify-end gap-3">
