@@ -40,3 +40,5 @@ backend/public/uploads/*
 # Database backups
 *.sql
 *.dump
+!backend/src/database/schema.sql
+!backend/src/database/seed.sql
