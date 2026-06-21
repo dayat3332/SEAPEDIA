@@ -30,6 +30,51 @@ pool.getConnection()
   .then(async (conn) => {
     console.log('✅ MySQL connected successfully');
     
+    // Self-healing check for users table columns and demo accounts
+    try {
+      const [columns] = await conn.query('SHOW COLUMNS FROM users');
+      const columnNames = columns.map(c => c.Field);
+      
+      if (!columnNames.includes('is_verified')) {
+        await conn.query('ALTER TABLE users ADD COLUMN is_verified BOOLEAN DEFAULT FALSE AFTER full_name');
+        console.log('✅ Added missing column: is_verified');
+      }
+      
+      if (!columnNames.includes('verification_otp')) {
+        if (columnNames.includes('verification_token')) {
+          await conn.query('ALTER TABLE users CHANGE COLUMN verification_token verification_otp VARCHAR(10) DEFAULT NULL');
+          console.log('✅ Renamed column verification_token to verification_otp');
+        } else {
+          await conn.query('ALTER TABLE users ADD COLUMN verification_otp VARCHAR(10) DEFAULT NULL AFTER is_verified');
+          console.log('✅ Added missing column: verification_otp');
+        }
+      }
+      
+      if (!columnNames.includes('token_expires_at')) {
+        await conn.query('ALTER TABLE users ADD COLUMN token_expires_at TIMESTAMP NULL DEFAULT NULL AFTER verification_otp');
+        console.log('✅ Added missing column: token_expires_at');
+      }
+      
+      // Auto-verify all demo accounts
+      const demoEmails = [
+        'admin@seapedia.com',
+        'seller1@seapedia.com',
+        'seller2@seapedia.com',
+        'buyer1@seapedia.com',
+        'buyer2@seapedia.com',
+        'driver1@seapedia.com',
+        'multirole@seapedia.com'
+      ];
+      const [verifyResult] = await conn.query(
+        'UPDATE users SET is_verified = TRUE WHERE email IN (?) AND is_verified = FALSE',
+        [demoEmails]
+      );
+      if (verifyResult.affectedRows > 0) {
+        console.log(`✅ Auto-verified ${verifyResult.affectedRows} demo user accounts`);
+      }
+    } catch (err) {
+      console.error('❌ Failed to verify/migrate users table columns:', err.message);
+    }
 
     try {
       await conn.query(`

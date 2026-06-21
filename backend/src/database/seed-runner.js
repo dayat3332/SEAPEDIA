@@ -63,7 +63,13 @@ async function seed() {
     // Check if admin1 user already exists
     const [adminRows] = await conn.query("SELECT id FROM users WHERE username = 'admin1'");
     if (adminRows.length > 0) {
-      console.log('⚠️  Demo user admin1 already exists. Skipping seed.');
+      console.log('⚠️  Demo user admin1 already exists. Skipping seed. Checking/fixing verification status of demo users...');
+      const demoUsernames = users.map(u => u.username);
+      await conn.query(
+        'UPDATE users SET is_verified = TRUE WHERE username IN (?) AND is_verified = FALSE',
+        [demoUsernames]
+      );
+      console.log('✅ Checked/fixed verification status of demo users!');
       return;
     }
 
