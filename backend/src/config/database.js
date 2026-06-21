@@ -73,11 +73,13 @@ pool.getConnection()
           if (fs.existsSync(schemaPath)) {
             console.log('📄 Executing schema.sql to recreate tables...');
             const sql = fs.readFileSync(schemaPath, 'utf8');
-            // Split statements by semicolon while ignoring comments and blank lines
-            const statements = sql
+            const cleanSql = sql
+              .replace(/--.*$/gm, '')
+              .replace(/\/\*[\s\S]*?\*\//g, '');
+            const statements = cleanSql
               .split(';')
               .map(s => s.trim())
-              .filter(s => s.length > 0 && !s.startsWith('--') && !s.startsWith('/*'));
+              .filter(s => s.length > 0);
               
             for (const stmt of statements) {
               await conn.query(stmt);
@@ -108,10 +110,13 @@ pool.getConnection()
         if (fs.existsSync(schemaPath)) {
           console.log('📄 Executing schema.sql to recreate tables...');
           const sql = fs.readFileSync(schemaPath, 'utf8');
-          const statements = sql
+          const cleanSql = sql
+            .replace(/--.*$/gm, '')
+            .replace(/\/\*[\s\S]*?\*\//g, '');
+          const statements = cleanSql
             .split(';')
             .map(s => s.trim())
-            .filter(s => s.length > 0 && !s.startsWith('--') && !s.startsWith('/*'));
+            .filter(s => s.length > 0);
             
           for (const stmt of statements) {
             await conn.query(stmt);
