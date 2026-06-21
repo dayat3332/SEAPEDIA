@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Card, Badge, Button, Input, Modal, Spinner } from '../../components/ui';
-import { walletService, addressService, orderService } from '../../services';
+import { walletService, addressService, orderService, storeService } from '../../services';
 import { ROLE_CONFIG, formatCurrency, formatDate, getImageUrl } from '../../utils/helpers';
 import {
   HiOutlineWallet,
@@ -22,17 +22,14 @@ export default function BuyerDashboard() {
   const [activeTab, setActiveTab] = useState('wallet');
   const [loading, setLoading] = useState(true);
 
-  // Data States
   const [wallet, setWallet] = useState({ balance: 0, transactions: [] });
   const [addresses, setAddresses] = useState([]);
   const [orders, setOrders] = useState([]);
 
-  // Top Up Modal State
   const [topupOpen, setTopupOpen] = useState(false);
   const [topupAmount, setTopupAmount] = useState('');
   const [submittingTopup, setSubmittingTopup] = useState(false);
 
-  // Address Modal State
   const [addressOpen, setAddressOpen] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [addressLabel, setAddressLabel] = useState('');
@@ -42,12 +39,17 @@ export default function BuyerDashboard() {
   const [addressDefault, setAddressDefault] = useState(false);
   const [submittingAddress, setSubmittingAddress] = useState(false);
 
-  // Order Details Modal State
   const [orderDetailOpen, setOrderDetailOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [loadingOrderDetails, setLoadingOrderDetails] = useState(false);
 
-  // Confirm Delete Modal
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [reviewOrderId, setReviewOrderId] = useState(null);
+  const [reviewStoreName, setReviewStoreName] = useState('');
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
+
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState(null);
 
@@ -87,7 +89,7 @@ export default function BuyerDashboard() {
       toast.success(`Successfully topped up ${formatCurrency(amount)}!`);
       setTopupOpen(false);
       setTopupAmount('');
-      // Refresh wallet info
+
       const walletRes = await walletService.getWallet();
       setWallet(walletRes.data.data);
     } catch (err) {
@@ -122,7 +124,7 @@ export default function BuyerDashboard() {
       }
 
       setAddressOpen(false);
-      // Refresh address list
+
       const addressRes = await addressService.getAddresses();
       setAddresses(addressRes.data.data);
     } catch (err) {
@@ -191,6 +193,41 @@ export default function BuyerDashboard() {
       setOrderDetailOpen(false);
     } finally {
       setLoadingOrderDetails(false);
+    }
+  };
+
+  const openReviewModal = (order) => {
+    setReviewOrderId(order.id);
+    setReviewStoreName(order.store_name);
+    setReviewRating(5);
+    setReviewComment('');
+    setOrderDetailOpen(false);
+    setReviewOpen(true);
+  };
+
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+    if (reviewRating < 1 || reviewRating > 5) {
+      return toast.error('Rating must be between 1 and 5.');
+    }
+    if (!reviewComment.trim()) {
+      return toast.error('Please enter review comment.');
+    }
+
+    try {
+      setSubmittingReview(true);
+      await storeService.submitStoreReview({
+        orderId: reviewOrderId,
+        rating: reviewRating,
+        comment: reviewComment.trim(),
+      });
+      toast.success('Review submitted successfully.');
+      setReviewOpen(false);
+      fetchDashboardData();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to submit review.');
+    } finally {
+      setSubmittingReview(false);
     }
   };
 
@@ -466,10 +503,22 @@ export default function BuyerDashboard() {
                           <span>Store: <strong className="text-surface-700">{order.store_name}</strong></span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
+                      <div className="flex flex-wrap items-center gap-3">
                         <Badge variant={getStatusBadgeVariant(order.status)}>
                           {getStatusLabel(order.status)}
                         </Badge>
+                        {order.status === 'pesanan_selesai' && (
+                          order.is_reviewed ? (
+                            <Badge variant="secondary" className="text-xs">Sudah Diulas</Badge>
+                          ) : (
+                            <button
+                              onClick={() => openReviewModal(order)}
+                              className="inline-flex items-center justify-center px-3 py-1 text-xs font-semibold rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 transition-all duration-200 cursor-pointer"
+                            >
+                              Beri Ulasan
+                            </button>
+                          )
+                        )}
                         <button
                           onClick={() => viewOrderDetails(order.id)}
                           className="inline-flex items-center justify-center px-3 py-1 text-xs font-semibold rounded-lg border border-primary-200 bg-primary-50/50 text-primary-700 hover:bg-primary-50 hover:text-primary-800 hover:border-primary-300 active:bg-primary-100 transition-all duration-200 cursor-pointer"
@@ -746,13 +795,74 @@ export default function BuyerDashboard() {
               </div>
             </div>
 
-            <div className="flex justify-end pt-4">
-              <Button onClick={() => setOrderDetailOpen(false)} className="w-full sm:w-auto">
+            <div className="flex justify-end gap-3 pt-4">
+              {selectedOrder.status === 'pesanan_selesai' && (
+                selectedOrder.is_reviewed ? (
+                  <Badge variant="secondary" className="flex items-center justify-center">Sudah Diulas</Badge>
+                ) : (
+                  <Button onClick={() => openReviewModal(selectedOrder)} className="!bg-emerald-600 hover:!bg-emerald-700 !text-white w-full sm:w-auto">
+                    Beri Ulasan Toko
+                  </Button>
+                )
+              )}
+              <Button onClick={() => setOrderDetailOpen(false)} variant="secondary" className="w-full sm:w-auto">
                 Close
               </Button>
             </div>
           </div>
         )}
+      </Modal>
+
+      {/* WRITE STORE REVIEW MODAL */}
+      <Modal isOpen={reviewOpen} onClose={() => setReviewOpen(false)} title={`Beri Ulasan untuk ${reviewStoreName}`}>
+        <form onSubmit={handleReviewSubmit} className="space-y-4 pt-2">
+          <p className="text-xs text-surface-500 leading-relaxed">
+            Berikan ulasan Anda untuk toko ini agar membantu pembeli lain memilih toko terbaik.
+          </p>
+          <div>
+            <label className="block text-xs font-semibold text-surface-600 uppercase mb-1">Rating</label>
+            <div className="flex items-center gap-1.5 mt-1">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => setReviewRating(star)}
+                  className="p-1 hover:scale-110 transition-transform focus:outline-none cursor-pointer"
+                >
+                  <svg
+                    className={`w-8 h-8 ${star <= reviewRating ? 'text-amber-400 fill-amber-400' : 'text-surface-300'}`}
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.006 5.404.434c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.434 2.082-5.005Z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              ))}
+              <span className="text-sm font-bold text-surface-600 ml-2">{reviewRating} dari 5</span>
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-surface-600 uppercase mb-1">Komentar / Ulasan</label>
+            <textarea
+              value={reviewComment}
+              onChange={(e) => setReviewComment(e.target.value)}
+              placeholder="Ceritakan pengalaman berbelanja Anda di toko ini..."
+              rows={4}
+              required
+              disabled={submittingReview}
+              className="w-full px-4 py-2 border border-surface-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+            />
+          </div>
+          <div className="flex justify-end gap-3 pt-4 border-t border-surface-200">
+            <Button variant="secondary" type="button" onClick={() => setReviewOpen(false)} disabled={submittingReview}>
+              Batal
+            </Button>
+            <Button type="submit" loading={submittingReview}>
+              Kirim Ulasan
+            </Button>
+          </div>
+        </form>
       </Modal>
     </main>
   );

@@ -32,6 +32,8 @@ export const storeService = {
   createStore: (data) => api.post('/stores', data),
   updateStore: (data) => api.put('/stores/my', data),
   getStoreSummary: (id) => api.get(`/stores/${id}`),
+  getStoreReviews: (storeId, params) => api.get(`/stores/${storeId}/reviews`, { params }),
+  submitStoreReview: (data) => api.post('/orders/review', data),
 };
 
 export const reviewService = {
@@ -91,4 +93,6 @@ export const adminService = {
   getLogs: () => api.get('/admin/logs'),
   simulateNextDay: (days) => api.post('/admin/simulate-next-day', { days }),
   deleteUser: (id) => api.delete(`/admin/users/${id}`),
+  getStoreReviews: (params) => api.get('/admin/store-reviews', { params }),
+  deleteStoreReview: (id) => api.delete(`/admin/store-reviews/${id}`),
 };
