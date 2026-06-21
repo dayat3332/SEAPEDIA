@@ -35,20 +35,29 @@ pool.getConnection()
       const [columns] = await conn.query('SHOW COLUMNS FROM users');
       const columnNames = columns.map(c => c.Field);
       
-      // Check and fix AUTO_INCREMENT for id column on critical tables
-      const tablesToVerify = ['users', 'wallets', 'carts'];
-      for (const table of tablesToVerify) {
-        try {
-          const [cols] = await conn.query(`SHOW COLUMNS FROM ${table}`);
-          const idCol = cols.find(c => c.Field === 'id');
-          if (idCol && !idCol.Extra.toLowerCase().includes('auto_increment')) {
-            console.log(`⚠️ Column 'id' in table '${table}' is not AUTO_INCREMENT. Fixing...`);
-            await conn.query(`ALTER TABLE ${table} MODIFY COLUMN id INT AUTO_INCREMENT`);
-            console.log(`✅ Column 'id' in table '${table}' modified to AUTO_INCREMENT`);
+      // Check and fix AUTO_INCREMENT for the 'id' column on ALL tables in the database
+      try {
+        const [tablesResult] = await conn.query('SHOW TABLES');
+        if (tablesResult.length > 0) {
+          const dbNameKey = Object.keys(tablesResult[0])[0];
+          const allTables = tablesResult.map(row => row[dbNameKey]);
+
+          for (const table of allTables) {
+            try {
+              const [cols] = await conn.query(`SHOW COLUMNS FROM ${table}`);
+              const idCol = cols.find(c => c.Field === 'id');
+              if (idCol && !idCol.Extra.toLowerCase().includes('auto_increment')) {
+                console.log(`⚠️ Column 'id' in table '${table}' is not AUTO_INCREMENT. Fixing...`);
+                await conn.query(`ALTER TABLE ${table} MODIFY COLUMN id INT AUTO_INCREMENT`);
+                console.log(`✅ Column 'id' in table '${table}' modified to AUTO_INCREMENT`);
+              }
+            } catch (tableErr) {
+              console.error(`❌ Failed to verify/fix AUTO_INCREMENT for table ${table}:`, tableErr.message);
+            }
           }
-        } catch (tableErr) {
-          console.error(`❌ Failed to verify AUTO_INCREMENT for table ${table}:`, tableErr.message);
         }
+      } catch (err) {
+        console.error('❌ Failed to fetch database tables list:', err.message);
       }
       
       if (!columnNames.includes('is_verified')) {
