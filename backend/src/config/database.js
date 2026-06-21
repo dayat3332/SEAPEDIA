@@ -32,38 +32,76 @@ pool.getConnection()
     
     // Self-healing check for users table columns and demo accounts
     try {
-      const [columns] = await conn.query('SHOW COLUMNS FROM users');
-      const columnNames = columns.map(c => c.Field);
-      
       // Check and fix AUTO_INCREMENT for the 'id' column on ALL tables in the database
-      try {
-        const [tablesResult] = await conn.query('SHOW TABLES');
-        if (tablesResult.length > 0) {
-          const dbNameKey = Object.keys(tablesResult[0])[0];
-          const allTables = tablesResult.map(row => row[dbNameKey]);
+      let missingAutoInc = false;
+      const [tablesResult] = await conn.query('SHOW TABLES');
+      if (tablesResult.length > 0) {
+        const dbNameKey = Object.keys(tablesResult[0])[0];
+        const allTables = tablesResult.map(row => row[dbNameKey]);
 
-          for (const table of allTables) {
-            try {
-              const [cols] = await conn.query(`SHOW COLUMNS FROM ${table}`);
-              const idCol = cols.find(c => c.Field === 'id');
-              if (idCol && !idCol.Extra.toLowerCase().includes('auto_increment')) {
-                console.log(`⚠️ Column 'id' in table '${table}' is not AUTO_INCREMENT. Fixing...`);
-                await conn.query(`ALTER TABLE ${table} MODIFY COLUMN id INT AUTO_INCREMENT`);
-                console.log(`✅ Column 'id' in table '${table}' modified to AUTO_INCREMENT`);
-              }
-            } catch (tableErr) {
-              console.error(`❌ Failed to verify/fix AUTO_INCREMENT for table ${table}:`, tableErr.message);
+        for (const table of allTables) {
+          try {
+            const [cols] = await conn.query(`SHOW COLUMNS FROM ${table}`);
+            const idCol = cols.find(c => c.Field === 'id');
+            if (idCol && !idCol.Extra.toLowerCase().includes('auto_increment')) {
+              console.log(`⚠️ Table '${table}' is missing AUTO_INCREMENT on 'id' column.`);
+              missingAutoInc = true;
+              break;
             }
+          } catch (tableErr) {
+            console.error(`❌ Failed to verify columns for table ${table}:`, tableErr.message);
           }
         }
-      } catch (err) {
-        console.error('❌ Failed to fetch database tables list:', err.message);
+
+        if (missingAutoInc) {
+          console.log('🚨 Critical: One or more tables are missing AUTO_INCREMENT constraints on TiDB. Re-initializing database structure...');
+          
+          // 1. Disable foreign key checks
+          await conn.query('SET FOREIGN_KEY_CHECKS = 0');
+          
+          // 2. Drop all tables
+          for (const table of allTables) {
+            console.log(`🗑️ Dropping table ${table}...`);
+            await conn.query(`DROP TABLE IF EXISTS ${table}`);
+          }
+          
+          // 3. Read and execute schema.sql
+          const fs = require('fs');
+          const path = require('path');
+          const schemaPath = path.join(__dirname, '../database/schema.sql');
+          
+          if (fs.existsSync(schemaPath)) {
+            console.log('📄 Executing schema.sql to recreate tables...');
+            const sql = fs.readFileSync(schemaPath, 'utf8');
+            // Split statements by semicolon while ignoring comments and blank lines
+            const statements = sql
+              .split(';')
+              .map(s => s.trim())
+              .filter(s => s.length > 0 && !s.startsWith('--') && !s.startsWith('/*'));
+              
+            for (const stmt of statements) {
+              await conn.query(stmt);
+            }
+            console.log('✅ Tables recreated successfully with AUTO_INCREMENT constraints!');
+          } else {
+            console.error('❌ Could not find schema.sql at', schemaPath);
+          }
+          
+          // 4. Re-enable foreign key checks
+          await conn.query('SET FOREIGN_KEY_CHECKS = 1');
+          
+          // 5. Run seed runner to repopulate database
+          console.log('🌱 Running seeds to repopulate data...');
+          const seed = require('../database/seed-runner');
+          conn.release();
+          await seed();
+          console.log('🎉 Database self-healing and seeding completed successfully!');
+          return;
+        }
       }
-      
-      if (!columnNames.includes('is_verified')) {
-        await conn.query('ALTER TABLE users ADD COLUMN is_verified BOOLEAN DEFAULT FALSE AFTER full_name');
-        console.log('✅ Added missing column: is_verified');
-      }
+
+      const [columns] = await conn.query('SHOW COLUMNS FROM users');
+      const columnNames = columns.map(c => c.Field);
       
       if (!columnNames.includes('verification_otp')) {
         if (columnNames.includes('verification_token')) {
