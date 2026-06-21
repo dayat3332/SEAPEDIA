@@ -98,6 +98,10 @@ Admins can trigger a **Time Leap** simulation in their dashboard. The backend sh
 - Product stock counts are restored to original levels.
 - Reversals are recorded in the system logs and wallet history.
 
+### 5. Email Verification & OTP Flow
+- **New Registrations:** Newly registered accounts are created in an unverified state (`is_verified = FALSE`). A 6-character numeric OTP is generated and sent via SMTP (or logged in console if SMTP is unconfigured) to complete verification.
+- **Pre-verified Demo Accounts:** All default demo accounts (`admin1`, `buyer1`, `seller1`, etc.) are pre-verified by default (`is_verified = TRUE`) to allow seamless, instant access during testing.
+
 ---
 
 ## 🔒 Security Hardening Protocol
