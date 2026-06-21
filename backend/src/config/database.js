@@ -37,13 +37,16 @@ pool.getConnection()
     
     // Self-healing check for users table columns and demo accounts
     try {
-      // Check and fix AUTO_INCREMENT for the 'id' column on ALL tables in the database
-      let missingAutoInc = false;
+      // Check tables in the database
       const [tablesResult] = await conn.query('SHOW TABLES');
-      if (tablesResult.length > 0) {
-        const dbNameKey = Object.keys(tablesResult[0])[0];
-        const allTables = tablesResult.map(row => row[dbNameKey]);
-
+      const dbNameKey = tablesResult.length > 0 ? Object.keys(tablesResult[0])[0] : null;
+      const allTables = tablesResult.length > 0 ? tablesResult.map(row => row[dbNameKey]) : [];
+      
+      const hasUsersTable = allTables.includes('users');
+      
+      // Also check if any existing table lacks AUTO_INCREMENT on 'id'
+      let missingAutoInc = false;
+      if (hasUsersTable) {
         for (const table of allTables) {
           try {
             const [cols] = await conn.query(`SHOW COLUMNS FROM ${table}`);
@@ -57,58 +60,22 @@ pool.getConnection()
             console.error(`❌ Failed to verify columns for table ${table}:`, tableErr.message);
           }
         }
+      }
 
-        if (missingAutoInc) {
-          console.log('🚨 Critical: One or more tables are missing AUTO_INCREMENT constraints on TiDB. Re-initializing database structure...');
-          
-          // 1. Disable foreign key checks
-          await conn.query('SET FOREIGN_KEY_CHECKS = 0');
-          
-          // 2. Drop all tables
-          for (const table of allTables) {
-            console.log(`🗑️ Dropping table ${table}...`);
-            await conn.query(`DROP TABLE IF EXISTS ${table}`);
-          }
-          
-          // 3. Read and execute schema.sql
-          const fs = require('fs');
-          const path = require('path');
-          const schemaPath = path.join(__dirname, '../database/schema.sql');
-          
-          if (fs.existsSync(schemaPath)) {
-            console.log('📄 Executing schema.sql to recreate tables...');
-            const sql = fs.readFileSync(schemaPath, 'utf8');
-            const cleanSql = sql
-              .replace(/--.*$/gm, '')
-              .replace(/\/\*[\s\S]*?\*\//g, '');
-            const statements = cleanSql
-              .split(';')
-              .map(s => s.trim())
-              .filter(s => s.length > 0);
-              
-            for (const stmt of statements) {
-              await conn.query(stmt);
-            }
-            console.log('✅ Tables recreated successfully with AUTO_INCREMENT constraints!');
-          } else {
-            console.error('❌ Could not find schema.sql at', schemaPath);
-          }
-          
-          // 4. Re-enable foreign key checks
-          await conn.query('SET FOREIGN_KEY_CHECKS = 1');
-          
-          // 5. Run seed runner to repopulate database
-          console.log('🌱 Running seeds to repopulate data...');
-          const seed = require('../database/seed-runner');
-          conn.release();
-          await seed();
-          console.log('🎉 Database self-healing and seeding completed successfully!');
-          dbReadyResolve();
-          return;
+      // If we don't have the core 'users' table or some table lacks AUTO_INCREMENT, re-initialize!
+      if (!hasUsersTable || missingAutoInc) {
+        console.log('🚨 Critical: Database is incomplete (missing users table) or lacks AUTO_INCREMENT. Re-initializing database structure...');
+        
+        // 1. Disable foreign key checks
+        await conn.query('SET FOREIGN_KEY_CHECKS = 0');
+        
+        // 2. Drop all tables
+        for (const table of allTables) {
+          console.log(`🗑️ Dropping table ${table}...`);
+          await conn.query(`DROP TABLE IF EXISTS ${table}`);
         }
-      } else {
-        // Database is completely empty! Recreate structure and seed
-        console.log('🚨 Database is empty. Re-initializing database structure...');
+        
+        // 3. Read and execute schema.sql
         const fs = require('fs');
         const path = require('path');
         const schemaPath = path.join(__dirname, '../database/schema.sql');
@@ -127,16 +94,20 @@ pool.getConnection()
           for (const stmt of statements) {
             await conn.query(stmt);
           }
-          console.log('✅ Tables created successfully!');
+          console.log('✅ Tables created/recreated successfully!');
         } else {
           console.error('❌ Could not find schema.sql at', schemaPath);
         }
         
-        console.log('🌱 Running seeds to populate data...');
+        // 4. Re-enable foreign key checks
+        await conn.query('SET FOREIGN_KEY_CHECKS = 1');
+        
+        // 5. Run seed runner to repopulate database
+        console.log('🌱 Running seeds to repopulate data...');
         const seed = require('../database/seed-runner');
         conn.release();
         await seed();
-        console.log('🎉 Database initialization and seeding completed successfully!');
+        console.log('🎉 Database self-healing and seeding completed successfully!');
         dbReadyResolve();
         return;
       }
