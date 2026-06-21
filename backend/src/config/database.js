@@ -98,6 +98,35 @@ pool.getConnection()
           console.log('🎉 Database self-healing and seeding completed successfully!');
           return;
         }
+      } else {
+        // Database is completely empty! Recreate structure and seed
+        console.log('🚨 Database is empty. Re-initializing database structure...');
+        const fs = require('fs');
+        const path = require('path');
+        const schemaPath = path.join(__dirname, '../database/schema.sql');
+        
+        if (fs.existsSync(schemaPath)) {
+          console.log('📄 Executing schema.sql to recreate tables...');
+          const sql = fs.readFileSync(schemaPath, 'utf8');
+          const statements = sql
+            .split(';')
+            .map(s => s.trim())
+            .filter(s => s.length > 0 && !s.startsWith('--') && !s.startsWith('/*'));
+            
+          for (const stmt of statements) {
+            await conn.query(stmt);
+          }
+          console.log('✅ Tables created successfully!');
+        } else {
+          console.error('❌ Could not find schema.sql at', schemaPath);
+        }
+        
+        console.log('🌱 Running seeds to populate data...');
+        const seed = require('../database/seed-runner');
+        conn.release();
+        await seed();
+        console.log('🎉 Database initialization and seeding completed successfully!');
+        return;
       }
 
       const [columns] = await conn.query('SHOW COLUMNS FROM users');
