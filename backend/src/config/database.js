@@ -26,6 +26,11 @@ if (process.env.DB_SOCKET_PATH) {
 
 const pool = mysql.createPool(dbConfig);
 
+let dbReadyResolve;
+pool.dbReady = new Promise((resolve) => {
+  dbReadyResolve = resolve;
+});
+
 pool.getConnection()
   .then(async (conn) => {
     console.log('✅ MySQL connected successfully');
@@ -98,6 +103,7 @@ pool.getConnection()
           conn.release();
           await seed();
           console.log('🎉 Database self-healing and seeding completed successfully!');
+          dbReadyResolve();
           return;
         }
       } else {
@@ -131,6 +137,7 @@ pool.getConnection()
         conn.release();
         await seed();
         console.log('🎉 Database initialization and seeding completed successfully!');
+        dbReadyResolve();
         return;
       }
 
@@ -212,9 +219,11 @@ pool.getConnection()
     }
     
     conn.release();
+    dbReadyResolve();
   })
   .catch((err) => {
     console.error('❌ MySQL connection failed:', err.message);
+    dbReadyResolve();
   });
 
 module.exports = pool;

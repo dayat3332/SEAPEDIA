@@ -1,5 +1,6 @@
 const app = require('./src/app');
 const env = require('./src/config/env');
+const pool = require('./src/config/database');
 const { startCleanupCron } = require('./src/cron/cleanupUnverified');
 const migrateVerification = require('./src/database/migrate-verification');
 const migrateRenameOtp = require('./src/database/migrate-rename-otp');
@@ -7,6 +8,10 @@ const seed = require('./src/database/seed-runner');
 
 const startServer = async () => {
   try {
+    // Wait for database initialization & self-healing to complete
+    console.log('⚙️ Waiting for database initialization...');
+    await pool.dbReady;
+
     // Run database migrations on startup
     console.log('⚙️ Running database migrations...');
     await migrateVerification();
