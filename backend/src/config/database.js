@@ -35,6 +35,22 @@ pool.getConnection()
       const [columns] = await conn.query('SHOW COLUMNS FROM users');
       const columnNames = columns.map(c => c.Field);
       
+      // Check and fix AUTO_INCREMENT for id column on critical tables
+      const tablesToVerify = ['users', 'wallets', 'carts'];
+      for (const table of tablesToVerify) {
+        try {
+          const [cols] = await conn.query(`SHOW COLUMNS FROM ${table}`);
+          const idCol = cols.find(c => c.Field === 'id');
+          if (idCol && !idCol.Extra.toLowerCase().includes('auto_increment')) {
+            console.log(`⚠️ Column 'id' in table '${table}' is not AUTO_INCREMENT. Fixing...`);
+            await conn.query(`ALTER TABLE ${table} MODIFY COLUMN id INT AUTO_INCREMENT`);
+            console.log(`✅ Column 'id' in table '${table}' modified to AUTO_INCREMENT`);
+          }
+        } catch (tableErr) {
+          console.error(`❌ Failed to verify AUTO_INCREMENT for table ${table}:`, tableErr.message);
+        }
+      }
+      
       if (!columnNames.includes('is_verified')) {
         await conn.query('ALTER TABLE users ADD COLUMN is_verified BOOLEAN DEFAULT FALSE AFTER full_name');
         console.log('✅ Added missing column: is_verified');
